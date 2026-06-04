@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
+import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 import Badge from '../components/Badge'
 import Modal from '../components/Modal'
@@ -7,9 +8,11 @@ import Toast from '../components/Toast'
 import Input from '../components/Input'
 import Select from '../components/Select'
 import NewInvoiceModal from '../components/NewInvoiceModal'
+import { generateInvoicePDF, generateReminderEmail } from '../utils/invoiceGenerator'
+import { formatDate } from '../utils/dateFormat'
 
 export default function InvoicesPage() {
-  const { user, invoices, setInvoices, addInvoice, addReminder, loadInvoices } = useStore()
+  const { user, invoices, setInvoices, addInvoice, addReminder, loadInvoices, canGenerateInvoice, incrementInvoiceGeneration, userPlan } = useStore()
   const [showModal, setShowModal] = useState(false)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
@@ -23,7 +26,7 @@ export default function InvoicesPage() {
   }, [user])
 
   const fmt = (n, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c }).format(n)
-  const fmtDate = (d) => new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const fmtDate = (d) => formatDate(d)
 
   const filteredInvoices = invoices.filter(i => {
     const matchesSearch = i.customer_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -34,6 +37,10 @@ export default function InvoicesPage() {
   })
 
   const handleCreateInvoice = async (invoiceData) => {
+    if (!canGenerateInvoice()) {
+      setToast({ message: 'Free plan: 1 invoice per week. Upgrade to create more.', type: 'error' })
+      return
+    }
     const newInvoice = {
       user_id: user.id,
       invoice_number: invoiceData.num,
@@ -45,14 +52,19 @@ export default function InvoicesPage() {
       status: invoiceData.status,
       description: invoiceData.desc,
       notes: invoiceData.notes,
+      payment_link: `${window.location.origin}/pay/${invoiceData.num}?source=chaser_link`,
+      payment_link_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
     }
     
     const { data: invoice, error } = await addInvoice(newInvoice)
     
     if (error) {
-      setToast({ message: 'Failed to create invoice', type: 'error' })
+      console.error('Invoice creation error:', error)
+      setToast({ message: error.message || 'Failed to create invoice', type: 'error' })
       return
     }
+
+    incrementInvoiceGeneration()
 
     const reminderTypes = [
       { type: 'before_due', days: -3 },
@@ -64,6 +76,7 @@ export default function InvoicesPage() {
     for (const { type, days } of reminderTypes) {
       const date = new Date(new Date(invoiceData.due).getTime() + days * 86400000)
       await addReminder({
+        user_id: user.id,
         invoice_id: invoice.id,
         type,
         scheduled_at: date.toISOString(),
@@ -90,6 +103,67 @@ export default function InvoicesPage() {
       if (!error) {
         setToast({ message: 'Invoice deleted', type: 'success' })
       }
+    }
+  }
+
+  const handleDownloadPDF = (invoice) => {
+    const customer = {
+      name: invoice.customer_name,
+      email: invoice.customer_email,
+    }
+    const company = {
+      company_name: user?.user_metadata?.company_name || 'Your Company',
+      email: user?.email,
+    }
+    generateInvoicePDF(invoice, customer, company)
+    setToast({ message: 'PDF downloaded', type: 'success' })
+  }
+
+  const handleSendReminder = async (invoice) => {
+    try {
+      const customer = {
+        name: invoice.customer_name,
+        email: invoice.customer_email,
+      }
+      const company = {
+        company_name: user?.user_metadata?.company_name || 'Your Company',
+        email: user?.email,
+      }
+      
+      // Generate or update payment link
+      let paymentLink = invoice.payment_link
+      if (!paymentLink) {
+        paymentLink = `${window.location.origin}/pay/${invoice.invoice_number}?source=chaser_link`
+        await supabase
+          .from('invoices')
+          .update({
+            payment_link: paymentLink,
+            payment_link_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+          })
+          .eq('id', invoice.id)
+      }
+      
+      const emailTemplate = generateReminderEmail(invoice, customer, company, paymentLink)
+      
+      // Call Supabase Edge Function to send email
+      const { data, error } = await supabase.functions.invoke('send_reminder_email', {
+        body: {
+          to: customer.email,
+          subject: emailTemplate.subject,
+          html: emailTemplate.html,
+          text: emailTemplate.text,
+          invoice_id: invoice.id,
+          user_id: user.id,
+          payment_link: paymentLink,
+        }
+      })
+
+      if (error) throw error
+
+      setToast({ message: 'Reminder sent successfully', type: 'success' })
+    } catch (error) {
+      console.error('Error sending reminder:', error)
+      setToast({ message: 'Failed to send reminder', type: 'error' })
     }
   }
 
@@ -132,6 +206,11 @@ export default function InvoicesPage() {
     const file = e.target.files[0]
     if (!file) return
 
+    if (!canGenerateInvoice()) {
+      setToast({ message: 'Free plan: 1 invoice per week. Upgrade to import more.', type: 'error' })
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = (ev) => {
       const lines = ev.target.result.split('\n').filter(l => l.trim())
@@ -160,6 +239,7 @@ export default function InvoicesPage() {
         }
       })
 
+      if (imported > 0) incrementInvoiceGeneration()
       setToast({ message: `${imported} invoice${imported !== 1 ? 's' : ''} imported`, type: 'success' })
     }
     reader.readAsText(file)
@@ -168,67 +248,56 @@ export default function InvoicesPage() {
 
   return (
     <div className="animate-fade-in">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="flex items-start justify-between mb-7 gap-4">
+      <div className="flex items-start justify-between mb-5 gap-4">
         <div>
-          <h1 className="font-display font-bold text-[22px] text-slate-900">Invoices</h1>
-          <p className="text-[12.5px] text-slate-500 mt-0.5">{invoices.length} total invoices</p>
+          <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Invoices</h1>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{invoices.length} total</p>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          <Button variant="default" onClick={downloadTemplate}>
-            <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
-              <polyline points="7 10 12 15 17 10" />
-              <line x1="12" y1="15" x2="12" y2="3" />
-            </svg>
+        <div className="flex gap-2">
+          <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
             CSV Template
-          </Button>
-          <label className="inline-flex items-center gap-1.5 font-medium cursor-pointer border transition-all duration-150 font-sans active:scale-[0.98] bg-white border-slate-300 text-slate-900 hover:bg-slate-100 px-3.5 py-2 text-sm">
-            <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-              <polyline points="16 16 12 12 8 16" />
-              <line x1="12" y1="12" x2="12" y2="21" />
-              <path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3" />
-            </svg>
+          </button>
+          <label className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors cursor-pointer">
             Import CSV
             <input type="file" accept=".csv" className="hidden" onChange={importCSV} />
           </label>
-          <Button variant="primary" onClick={() => setShowModal(true)}>
-            <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            New Invoice
-          </Button>
+          <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg text-xs font-medium hover:opacity-90 transition-opacity">
+            + New Invoice
+          </button>
         </div>
       </div>
 
+      {/* Plan restriction notice */}
+      {userPlan === 'free' && (
+        <div className="mb-4 px-4 py-2.5 bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg">
+          <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+            <span>Free plan: 1 invoice per week.</span>
+            <a href="/app/plans" className="font-semibold underline text-neutral-900 dark:text-white">Upgrade</a>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
-      <div className="flex gap-2.5 mb-4 items-center flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[320px]">
-          <svg viewBox="0 0 24 24" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 stroke-slate-400 fill-none stroke-2">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <div className="flex gap-2 mb-4 items-center flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+          <svg viewBox="0 0 24 24" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 stroke-neutral-400 fill-none stroke-2">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           <input
-            className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 text-sm outline-none font-sans transition-border duration-150 focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(34,197,94,0.12)]"
-            placeholder="Search by name, number, email…"
+            className="w-full pl-9 pr-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none transition-all focus:border-neutral-400 dark:focus:border-neutral-500 placeholder:text-neutral-400"
+            placeholder="Search invoices..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <select
-          className="px-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 text-sm outline-none font-sans cursor-pointer transition-border duration-150 focus:border-green-500"
+          className="px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none cursor-pointer transition-all focus:border-neutral-400 dark:focus:border-neutral-500"
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
         >
-          <option value="all">All statuses</option>
+          <option value="all">All</option>
           <option value="pending">Pending</option>
           <option value="overdue">Overdue</option>
           <option value="paid">Paid</option>
@@ -237,80 +306,56 @@ export default function InvoicesPage() {
         </select>
       </div>
 
-      {/* Bulk Actions Bar */}
+      {/* Bulk Actions */}
       {selected.size > 0 && (
-        <div className="flex items-center gap-3 px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg mb-3.5">
-          <span className="text-[13px] text-green-600 font-medium">{selected.size} selected</span>
-          <Button variant="danger" size="sm" onClick={bulkDelete} className="ml-auto">
-            <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-              <polyline points="3 6 5 6 21 6" />
-              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-            </svg>
-            Delete selected
-          </Button>
-          <Button variant="default" size="sm" onClick={() => setSelected(new Set())}>Deselect all</Button>
+        <div className="flex items-center gap-2 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg mb-3">
+          <span className="text-xs font-medium text-neutral-900 dark:text-white">{selected.size} selected</span>
+          <button onClick={bulkDelete} className="ml-auto px-2 py-1 rounded text-[10px] font-medium bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 hover:bg-red-100 transition-colors">Delete</button>
+          <button onClick={() => setSelected(new Set())} className="px-2 py-1 rounded text-[10px] font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors">Deselect</button>
         </div>
       )}
 
-      {/* Invoices Table */}
-      <div className="bg-white border border-slate-200 rounded-[10px] overflow-hidden">
+      {/* Table */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
-              <th className="w-9 px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">
-                <input
-                  type="checkbox"
-                  checked={selected.size === filteredInvoices.length && filteredInvoices.length > 0}
-                  onChange={toggleAll}
-                />
+            <tr className="bg-neutral-50 dark:bg-neutral-800/50">
+              <th className="w-8 px-4 py-2.5 text-left border-b border-neutral-200 dark:border-neutral-800">
+                <input type="checkbox" checked={selected.size === filteredInvoices.length && filteredInvoices.length > 0} onChange={toggleAll} />
               </th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Invoice</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Customer</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Amount</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Due Date</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Status</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Actions</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Invoice</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Customer</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Amount</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Due</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Status</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
             {filteredInvoices.length > 0 ? (
               filteredInvoices.map((inv) => (
-                <tr key={inv.id} className="cursor-pointer hover:bg-slate-50 transition-colors">
-                  <td className="px-4.5 py-3.25" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selected.has(inv.id)}
-                      onChange={() => toggleSelect(inv.id)}
-                    />
+                <tr key={inv.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
+                    <input type="checkbox" checked={selected.has(inv.id)} onChange={() => toggleSelect(inv.id)} />
                   </td>
-                  <td className="px-4.5 py-3.25 text-[13px] font-medium text-green-600">{inv.invoice_number}</td>
-                  <td className="px-4.5 py-3.25 text-[13px]">
-                    <div className="font-medium">{inv.customer_name}</div>
-                    <div className="text-[12px] text-slate-500">{inv.customer_email}</div>
+                  <td className="px-4 py-3 text-xs font-medium text-neutral-900 dark:text-white">{inv.invoice_number}</td>
+                  <td className="px-4 py-3 text-xs">
+                    <div className="font-medium text-neutral-900 dark:text-white">{inv.customer_name}</div>
+                    <div className="text-[10px] text-neutral-500">{inv.customer_email}</div>
                   </td>
-                  <td className="px-4.5 py-3.25 text-[13px] font-semibold">{fmt(inv.amount)}</td>
-                  <td className="px-4.5 py-3.25 text-[13px] text-slate-500">{fmtDate(inv.due_date)}</td>
-                  <td className="px-4.5 py-3.25"><Badge status={inv.status} /></td>
-                  <td className="px-4.5 py-3.25 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs font-medium text-neutral-900 dark:text-white">{fmt(inv.amount)}</td>
+                  <td className="px-4 py-3 text-xs text-neutral-500 dark:text-neutral-400">{fmtDate(inv.due_date)}</td>
+                  <td className="px-4 py-3"><Badge status={inv.status} /></td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <button onClick={() => handleDownloadPDF(inv)} className="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors mr-1">PDF</button>
                     {inv.status !== 'paid' && inv.status !== 'cancelled' && (
-                      <button
-                        onClick={() => markPaid(inv.id)}
-                        className="px-2.75 py-1 rounded-md text-[12px] font-medium cursor-pointer border-none transition-all bg-green-100 text-green-700 hover:bg-green-200 mr-1"
-                      >
-                        Mark Paid
-                      </button>
+                      <button onClick={() => handleSendReminder(inv)} className="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors mr-1">Remind</button>
                     )}
-                    <button
-                      onClick={() => deleteInvoice(inv.id)}
-                      className="inline-flex items-center px-1.5 py-1 rounded-md text-[12px] font-medium cursor-pointer border-none transition-all text-slate-400 hover:bg-red-100 hover:text-red-600"
-                    >
-                      <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-                        <polyline points="3 6 5 6 21 6" />
-                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                        <path d="M10 11v6" />
-                        <path d="M14 11v6" />
-                        <path d="M9 6V4h6v2" />
-                      </svg>
+                    {inv.status !== 'paid' && inv.status !== 'cancelled' && (
+                      <button onClick={() => markPaid(inv.id)} className="inline-flex items-center px-2 py-1 rounded text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors mr-1">Paid</button>
+                    )}
+                    <button onClick={() => deleteInvoice(inv.id)} className="inline-flex items-center p-1 rounded text-neutral-400 hover:text-red-500 transition-colors">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
                     </button>
                   </td>
                 </tr>
@@ -318,14 +363,8 @@ export default function InvoicesPage() {
             ) : (
               <tr>
                 <td colSpan="7">
-                  <div className="flex flex-col items-center justify-center py-13 text-center">
-                    <div className="w-11 h-11 rounded-[11px] bg-slate-100 flex items-center justify-center mb-3">
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-slate-400 fill-none stroke-1.5">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                      </svg>
-                    </div>
-                    <p className="font-medium">No invoices found</p>
-                    <p className="text-[12px] text-slate-400 mt-1">Try a different filter</p>
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-xs text-neutral-500">No invoices found</p>
                   </div>
                 </td>
               </tr>

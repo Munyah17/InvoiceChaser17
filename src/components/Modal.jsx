@@ -26,10 +26,10 @@ export default function Modal({ isOpen, onClose, children, size = 'default' }) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className={`relative bg-white border border-slate-200 rounded-2xl p-6 shadow-glow ${sizes[size]}`}>
+      <div className={`relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-glow ${sizes[size]}`}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"
+          className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-200 transition-colors"
         >
           <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-current fill-none stroke-2">
             <line x1="18" y1="6" x2="6" y2="18" />

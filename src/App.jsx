@@ -1,37 +1,68 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { useStore } from './store/useStore'
-import { onAuthStateChange, getCurrentUser } from './lib/supabase'
+import { onAuthStateChange, supabase } from './lib/supabase'
 import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute'
+import { ThemeProvider } from './context/ThemeContext'
 
 // Pages
 import LandingPage from './pages/LandingPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import PricingPage from './pages/PricingPage'
+import PaymentSuccessPage from './pages/PaymentSuccessPage'
+import PaymentFailurePage from './pages/PaymentFailurePage'
+import CheckoutPage from './pages/CheckoutPage'
 import Dashboard from './pages/Dashboard'
 import InvoicesPage from './pages/InvoicesPage'
 import CustomersPage from './pages/CustomersPage'
 import RemindersPage from './pages/RemindersPage'
+import BOQPage from './pages/BOQPage'
+import BOMPage from './pages/BOMPage'
+import PlansPage from './pages/PlansPage'
 import SettingsPage from './pages/SettingsPage'
+import TermsPage from './pages/TermsPage'
+import QuotationPage from './pages/QuotationPage'
+import ProformaPage from './pages/ProformaPage'
+import InvoiceMakerPage from './pages/InvoiceMakerPage'
+import DebitNotePage from './pages/DebitNotePage'
+import CreditNotePage from './pages/CreditNotePage'
 import AdminPage from './pages/AdminPage'
+import ProfilePage from './pages/ProfilePage'
 
 // Layout
 import AppLayout from './components/AppLayout'
 
 function App() {
-  const { setUser, setSession } = useStore()
+  const { setUser, setSession, loadRole } = useStore()
 
   useEffect(() => {
     // Check for existing session
-    getCurrentUser().then(({ user }) => {
-      if (user) setUser(user)
-    })
+    const ensureUserRecord = async (user) => {
+      await supabase.from('users').upsert(
+        { id: user.id, email: user.email },
+        { onConflict: 'id', ignoreDuplicates: true }
+      )
+    }
 
-    // Listen for auth changes
-    const { data: { subscription } } = onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN') {
+    const restoreSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session) {
+        await ensureUserRecord(session.user)
         setUser(session.user)
         setSession(session)
+        await loadRole()
+      }
+    }
+    restoreSession()
+
+    // Listen for auth changes
+    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN') {
+        await ensureUserRecord(session.user)
+        setUser(session.user)
+        setSession(session)
+        loadRole()
       } else if (event === 'SIGNED_OUT') {
         setUser(null)
         setSession(null)
@@ -39,15 +70,20 @@ function App() {
     })
 
     return () => subscription.unsubscribe()
-  }, [setUser, setSession])
+  }, [setUser, setSession, loadRole])
 
   return (
-    <BrowserRouter>
-      <Routes>
+    <ThemeProvider>
+      <BrowserRouter>
+        <Routes>
         {/* Public routes */}
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/payment-success" element={<PaymentSuccessPage />} />
+        <Route path="/payment-failure" element={<PaymentFailurePage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         
         {/* Protected routes */}
         <Route path="/app" element={
@@ -60,7 +96,17 @@ function App() {
           <Route path="invoices" element={<InvoicesPage />} />
           <Route path="customers" element={<CustomersPage />} />
           <Route path="reminders" element={<RemindersPage />} />
+          <Route path="boq" element={<BOQPage />} />
+          <Route path="bom" element={<BOMPage />} />
+          <Route path="plans" element={<PlansPage />} />
           <Route path="settings" element={<SettingsPage />} />
+          <Route path="terms" element={<TermsPage />} />
+          <Route path="quotation" element={<QuotationPage />} />
+          <Route path="proforma" element={<ProformaPage />} />
+          <Route path="invoice-maker" element={<InvoiceMakerPage />} />
+          <Route path="debit-note" element={<DebitNotePage />} />
+          <Route path="credit-note" element={<CreditNotePage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
         
         {/* Admin route */}
@@ -73,7 +119,8 @@ function App() {
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </BrowserRouter>
+      </BrowserRouter>
+    </ThemeProvider>
   )
 }
 

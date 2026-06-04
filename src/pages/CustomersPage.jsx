@@ -88,102 +88,72 @@ export default function CustomersPage() {
 
   return (
     <div className="animate-fade-in">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="flex items-start justify-between mb-7 gap-4">
+      <div className="flex items-start justify-between mb-5 gap-4">
         <div>
-          <h1 className="font-display font-bold text-[22px] text-slate-900">Customers</h1>
-          <p className="text-[12.5px] text-slate-500 mt-0.5">{customerList.length} customers</p>
+          <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Customers</h1>
+          <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{customerList.length} total</p>
         </div>
-        <Button variant="primary" onClick={() => setShowModal(true)}>
-          <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Add Customer
-        </Button>
+        <button onClick={() => setShowModal(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg text-xs font-medium hover:opacity-90 transition-opacity">
+          + Add Customer
+        </button>
       </div>
 
-      {/* Search */}
-      <div className="relative flex-1 min-w-[200px] max-w-[320px] mb-4">
-        <svg viewBox="0 0 24 24" className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 stroke-slate-400 fill-none stroke-2">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      <div className="relative flex-1 min-w-[200px] max-w-[300px] mb-4">
+        <svg viewBox="0 0 24 24" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 stroke-neutral-400 fill-none stroke-2">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         <input
-          className="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg bg-white text-slate-900 text-sm outline-none font-sans transition-border duration-150 focus:border-green-500 focus:shadow-[0_0_0_2px_rgba(34,197,94,0.12)]"
-          placeholder="Search customers…"
+          className="w-full pl-9 pr-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none transition-all focus:border-neutral-400 dark:focus:border-neutral-500 placeholder:text-neutral-400"
+          placeholder="Search customers..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* Customers Table */}
-      <div className="bg-white border border-slate-200 rounded-[10px] overflow-hidden">
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
         <table className="w-full border-collapse">
           <thead>
-            <tr>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Name</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Email</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Company</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Invoices</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50">Total Billed</th>
-              <th className="px-4.5 py-2.75 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-[0.05em] border-b border-slate-200 bg-slate-50"></th>
+            <tr className="bg-neutral-50 dark:bg-neutral-800/50">
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Name</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Email</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Invoices</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Total</th>
+              <th className="px-4 py-2.5 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800"></th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
             {customerList.length > 0 ? (
-              customerList.map((customer, index) => {
-                const color = colors[index % colors.length]
-                return (
-                  <tr key={customer.email} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4.5 py-3.25 text-[13px]">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold" style={{ background: color.bg, color: color.text }}>
-                          {customer.name[0].toUpperCase()}
-                        </div>
-                        <span className="font-medium">{customer.name}</span>
+              customerList.map((customer) => (
+                <tr key={customer.email} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                  <td className="px-4 py-3 text-xs">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300">
+                        {customer.name[0].toUpperCase()}
                       </div>
-                    </td>
-                    <td className="px-4.5 py-3.25 text-[13px] text-slate-500">{customer.email}</td>
-                    <td className="px-4.5 py-3.25 text-[13px] text-slate-500">{customer.company}</td>
-                    <td className="px-4.5 py-3.25">
-                      <span className="inline-flex items-center px-2.5 py-[3px] rounded-full text-[11px] font-semibold bg-slate-100 text-slate-600">
-                        {customer.count} invoice{customer.count !== 1 ? 's' : ''}
-                      </span>
-                    </td>
-                    <td className="px-4.5 py-3.25 text-[13px] font-semibold">{fmt(customer.total)}</td>
-                    <td className="px-4.5 py-3.25">
-                      <button
-                        onClick={() => handleDeleteCustomer(customer.id || customer.email)}
-                        className="inline-flex items-center px-1.5 py-1 rounded-md text-[12px] font-medium cursor-pointer border-none transition-all text-slate-400 hover:bg-red-100 hover:text-red-600"
-                      >
-                        <svg viewBox="0 0 24 24" className="w-3.25 h-3.25 stroke-current fill-none stroke-2">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                )
-              })
+                      <span className="font-medium text-neutral-900 dark:text-white">{customer.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-neutral-500 dark:text-neutral-400">{customer.email}</td>
+                  <td className="px-4 py-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                      {customer.count}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-xs font-medium text-neutral-900 dark:text-white">{fmt(customer.total)}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={() => handleDeleteCustomer(customer.id || customer.email)} className="inline-flex items-center p-1 rounded text-neutral-400 hover:text-red-500 transition-colors">
+                      <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg>
+                    </button>
+                  </td>
+                </tr>
+              ))
             ) : (
               <tr>
-                <td colSpan="6">
-                  <div className="flex flex-col items-center justify-center py-13 text-center">
-                    <div className="w-11 h-11 rounded-[11px] bg-slate-100 flex items-center justify-center mb-3">
-                      <svg viewBox="0 0 24 24" className="w-5 h-5 stroke-slate-400 fill-none stroke-1.5">
-                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                      </svg>
-                    </div>
-                    <p className="font-medium">No customers yet</p>
+                <td colSpan="5">
+                  <div className="flex flex-col items-center justify-center py-10 text-center">
+                    <p className="text-xs text-neutral-500">No customers yet</p>
                   </div>
                 </td>
               </tr>
@@ -192,41 +162,39 @@ export default function CustomersPage() {
         </table>
       </div>
 
-      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Add Customer">
-        <form onSubmit={handleAddCustomer}>
-          <Input
-            label="Name *"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            placeholder="Jane Smith"
-            required
-          />
-          <Input
-            label="Email *"
-            type="email"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            placeholder="jane@company.com"
-            required
-          />
-          <Input
-            label="Company"
-            value={formData.company}
-            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-            placeholder="Acme Corp"
-          />
-          <Input
-            label="Phone"
-            value={formData.phone}
-            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-            placeholder="+263 77 000 0000"
-          />
-          <div className="flex gap-2.5 justify-end mt-2.5">
-            <Button type="button" variant="default" onClick={() => setShowModal(false)}>Cancel</Button>
-            <Button type="submit" variant="primary">Add Customer</Button>
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShowModal(false)} />
+          <div className="relative bg-white dark:bg-neutral-900 rounded-2xl w-full max-w-md border border-neutral-200 dark:border-neutral-800 shadow-2xl">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
+              <h2 className="font-semibold text-sm text-neutral-900 dark:text-white">Add Customer</h2>
+              <button onClick={() => setShowModal(false)} className="text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-current fill-none stroke-2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+            </div>
+            <form onSubmit={handleAddCustomer} className="p-5 space-y-3">
+              <div>
+                <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Name *</label>
+                <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="Jane Smith" required />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Email *</label>
+                <input type="email" className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} placeholder="jane@company.com" required />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Company</label>
+                <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.company} onChange={e => setFormData({...formData, company: e.target.value})} placeholder="Acme Corp" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Phone</label>
+                <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} placeholder="+263 77 000 0000" />
+              </div>
+              <div className="flex gap-2 justify-end pt-2">
+                <button type="button" onClick={() => setShowModal(false)} className="px-4 py-2 rounded-lg text-xs font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-lg text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:opacity-90 transition-opacity">Add Customer</button>
+              </div>
+            </form>
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
     </div>
   )
 }

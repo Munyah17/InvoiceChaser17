@@ -1,4 +1,27 @@
 import { supabase } from './supabase'
+import { resolveRole } from '../utils/rbac'
+
+// Role resolution — prefers profiles.role, falls back to users.is_admin
+export const getUserRole = async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const { data: profileData } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single()
+
+  if (profileData?.role) return profileData.role
+
+  const { data: userData } = await supabase
+    .from('users')
+    .select('is_admin')
+    .eq('id', user.id)
+    .single()
+
+  return resolveRole(null, userData?.is_admin)
+}
 
 // Profile API
 export const getProfile = async (userId) => {
@@ -115,20 +138,28 @@ export const getCustomerByEmail = async (userId, email) => {
 
 // Reminders API
 export const getReminders = async (userId) => {
+  // First get invoice IDs for this user, then query reminders
+  const { data: invoiceData } = await supabase
+    .from('invoices')
+    .select('id')
+    .eq('user_id', userId)
+
+  const invoiceIds = invoiceData?.map(i => i.id) || []
+  if (invoiceIds.length === 0) return { data: [], error: null }
+
   const { data, error } = await supabase
     .from('reminders')
     .select(`
       *,
       invoices (
         invoice_number,
-        customers (
-          name
-        )
+        customer_name,
+        customer_email,
+        amount,
+        due_date
       )
     `)
-    .in('invoice_id', 
-      supabase.from('invoices').select('id').eq('user_id', userId)
-    )
+    .in('invoice_id', invoiceIds)
     .order('scheduled_at', { ascending: false })
   return { data, error }
 }
@@ -147,7 +178,16 @@ export const updateReminder = async (id, updates) => {
     .from('reminders')
     .update(updates)
     .eq('id', id)
-    .select()
+    .select(`
+      *,
+      invoices (
+        invoice_number,
+        customer_name,
+        customer_email,
+        amount,
+        due_date
+      )
+    `)
     .single()
   return { data, error }
 }

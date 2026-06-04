@@ -12,9 +12,9 @@ export default function AppLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0f]">
       <Sidebar />
-      <main className="ml-[220px] p-8">
+      <main className="ml-[200px] p-6 max-w-[1600px]">
         <Outlet />
       </main>
     </div>

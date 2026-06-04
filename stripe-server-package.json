@@ -1,0 +1,18 @@
+{
+  "name": "invoicechaser-stripe-server",
+  "version": "1.0.0",
+  "description": "Stripe checkout backend for InvoiceChaser",
+  "main": "stripe-server.js",
+  "scripts": {
+    "start": "node stripe-server.js",
+    "dev": "nodemon stripe-server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "stripe": "^14.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  }
+}

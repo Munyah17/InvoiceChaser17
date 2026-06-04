@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <rect width="200" height="60" rx="4" fill="#0B3D91"/>
+  <text x="100" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white" text-anchor="middle">paynow</text>
+  <text x="100" y="42" font-family="Arial, sans-serif" font-size="10" fill="#7EB8FF" text-anchor="middle">secure online payments</text>
+</svg>

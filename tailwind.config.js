@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,36 +8,35 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'DM Sans', 'sans-serif'],
-        display: ['Syne', 'sans-serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        display: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       colors: {
-        brand: {
-          DEFAULT: '#10b981',
-          hover: '#059669',
-          light: '#d1fae5',
-          text: '#065f46',
+        surface: {
+          DEFAULT: '#ffffff',
+          dark: '#0f0f11',
+          card: '#f7f7f8',
+          'card-dark': '#18181b',
+          border: '#e4e4e7',
+          'border-dark': '#27272a',
+        },
+        primary: {
+          DEFAULT: '#000000',
+          hover: '#1a1a1a',
+          light: '#f4f4f5',
+          muted: '#71717a',
         },
         accent: {
-          DEFAULT: '#6366f1',
-          hover: '#4f46e5',
-          light: '#e0e7ff',
+          DEFAULT: '#2563eb',
+          hover: '#1d4ed8',
+          light: '#dbeafe',
         }
       },
       boxShadow: {
-        'soft': '0 4px 20px rgba(0, 0, 0, 0.05)',
-        'glow': '0 0 40px rgba(16, 185, 129, 0.15)',
+        'soft': '0 1px 3px rgba(0, 0, 0, 0.08)',
+        'card': '0 4px 24px rgba(0, 0, 0, 0.06)',
+        'glow': '0 0 40px rgba(37, 99, 235, 0.12)',
       },
-      animation: {
-        'float': 'float 6s ease-in-out infinite',
-        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
-      keyframes: {
-        float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-20px)' },
-        }
-      }
     },
   },
   plugins: [],

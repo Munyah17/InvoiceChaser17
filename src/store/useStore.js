@@ -7,6 +7,7 @@ export const useStore = create(
     (set, get) => ({
       user: null,
       session: null,
+      userRole: null,
       invoices: [],
       customers: [],
       reminders: [],
@@ -33,16 +34,128 @@ export const useStore = create(
         company_name: '',
         email: '',
       },
+      userPlan: 'free',
+      boqGenerations: { count: 0, weekStart: null },
+      invoiceGenerations: { count: 0, weekStart: null },
+      bomGenerations: { count: 0, weekStart: null },
       loading: false,
       
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
+      setUserRole: (role) => set({ userRole: role }),
       setInvoices: (invoices) => set({ invoices }),
       setCustomers: (customers) => set({ customers }),
       setReminders: (reminders) => set({ reminders }),
       setTemplates: (templates) => set({ templates }),
       setSettings: (settings) => set({ settings }),
       setLoading: (loading) => set({ loading }),
+      setUserPlan: (plan) => set({ userPlan: plan }),
+      
+      canGenerateBOQ: () => {
+        const state = get()
+        const plan = state.userPlan || 'free'
+        const limits = { free: 1, starter: 5, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
+        const limit = limits[plan] || 1
+        
+        if (limit === Infinity) return true
+        
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.boqGenerations.weekStart !== weekStart) {
+          set({ boqGenerations: { count: 0, weekStart } })
+          return true
+        }
+        
+        return state.boqGenerations.count < limit
+      },
+      
+      incrementBOQGeneration: () => {
+        const state = get()
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.boqGenerations.weekStart !== weekStart) {
+          set({ boqGenerations: { count: 1, weekStart } })
+        } else {
+          set({ boqGenerations: { count: state.boqGenerations.count + 1, weekStart } })
+        }
+      },
+      
+      canGenerateInvoice: () => {
+        const state = get()
+        const plan = state.userPlan || 'free'
+        const limits = { free: 1, starter: Infinity, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
+        const limit = limits[plan] || 1
+        
+        if (limit === Infinity) return true
+        
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.invoiceGenerations.weekStart !== weekStart) {
+          set({ invoiceGenerations: { count: 0, weekStart } })
+          return true
+        }
+        
+        return state.invoiceGenerations.count < limit
+      },
+      
+      incrementInvoiceGeneration: () => {
+        const state = get()
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.invoiceGenerations.weekStart !== weekStart) {
+          set({ invoiceGenerations: { count: 1, weekStart } })
+        } else {
+          set({ invoiceGenerations: { count: state.invoiceGenerations.count + 1, weekStart } })
+        }
+      },
+      
+      canGenerateBOM: () => {
+        const state = get()
+        const plan = state.userPlan || 'free'
+        const limits = { free: 1, starter: 5, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
+        const limit = limits[plan] || 1
+        
+        if (limit === Infinity) return true
+        
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.bomGenerations.weekStart !== weekStart) {
+          set({ bomGenerations: { count: 0, weekStart } })
+          return true
+        }
+        
+        return state.bomGenerations.count < limit
+      },
+      
+      incrementBOMGeneration: () => {
+        const state = get()
+        const now = new Date()
+        const weekStart = new Date(now.setDate(now.getDate() - now.getDay())).toDateString()
+        
+        if (state.bomGenerations.weekStart !== weekStart) {
+          set({ bomGenerations: { count: 1, weekStart } })
+        } else {
+          set({ bomGenerations: { count: state.bomGenerations.count + 1, weekStart } })
+        }
+      },
+      
+      canStore: (docType) => {
+        const plan = get().userPlan || 'free'
+        const perms = {
+          free: ['invoices', 'boq', 'bom'],
+          starter: ['invoices', 'boq', 'bom'],
+          professional: ['invoices', 'boq', 'bom', 'quotations', 'proformas', 'notes'],
+          business: ['invoices', 'boq', 'bom', 'quotations', 'proformas', 'notes'],
+          lifetime: ['invoices', 'boq', 'bom', 'quotations', 'proformas', 'notes'],
+          enterprise: ['invoices', 'boq', 'bom', 'quotations', 'proformas', 'notes'],
+        }
+        return (perms[plan] || []).includes(docType)
+      },
       
       // Load data from Supabase
       loadInvoices: async (userId) => {
@@ -199,7 +312,20 @@ export const useStore = create(
         return { data, error }
       },
       
-      logout: () => set({ user: null, session: null, invoices: [], customers: [], reminders: [] }),
+      logout: () => {
+        localStorage.removeItem('zustand-store')
+        set({ user: null, session: null, userRole: null, invoices: [], customers: [], reminders: [] })
+      },
+      
+      loadRole: async () => {
+        try {
+          const role = await api.getUserRole()
+          set({ userRole: role })
+          return role
+        } catch (e) {
+          return null
+        }
+      },
     }),
     {
       name: 'invoice-chaser-storage',

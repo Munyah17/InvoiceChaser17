@@ -2,10 +2,10 @@ export default function Button({ variant = 'default', size = 'default', children
   const baseStyles = 'inline-flex items-center gap-2 font-medium cursor-pointer border transition-all duration-200 font-sans active:scale-[0.98] rounded-xl'
   
   const variants = {
-    default: 'bg-white border-slate-300 text-slate-900 hover:bg-slate-50 hover:border-slate-400',
-    primary: 'bg-gradient-to-r from-brand to-brand-hover border-brand text-white hover:shadow-glow',
+    default: 'bg-white border-neutral-300 text-neutral-900 hover:bg-neutral-50 hover:border-neutral-400',
+    primary: 'bg-neutral-900 border-neutral-900 text-white hover:opacity-90',
     danger: 'bg-red-500 border-red-500 text-white hover:bg-red-600',
-    ghost: 'bg-transparent border-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900',
+    ghost: 'bg-transparent border-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
   }
   
   const sizes = {
