@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- Additive: add any columns that may be missing on an existing profiles table
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS name          TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS full_name      TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS company_name   TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS email          TEXT;
@@ -74,9 +75,10 @@ CREATE TRIGGER prevent_protected_user_deletion_trigger
 CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, email, role, created_at, updated_at)
+  INSERT INTO public.profiles (id, name, full_name, email, role, created_at, updated_at)
   VALUES (
     NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1)),
     NEW.raw_user_meta_data->>'full_name',
     NEW.email,
     COALESCE(NEW.raw_user_meta_data->>'role', 'user'),
@@ -111,9 +113,10 @@ CREATE POLICY "profiles_delete" ON public.profiles FOR DELETE
 
 -- 7. Set Super Admin flags on the specific account
 --    (User ID created by the setup script)
-INSERT INTO public.profiles (id, full_name, email, role, is_protected, plan, created_at, updated_at)
+INSERT INTO public.profiles (id, name, full_name, email, role, is_protected, plan, created_at, updated_at)
 VALUES (
   '33959883-96ce-4372-8cc8-39958658cef8',
+  'Super Admin',
   'Super Admin',
   'munyamuzvidziwa19@gmail.com',
   'super_admin',
@@ -122,6 +125,7 @@ VALUES (
   NOW(), NOW()
 )
 ON CONFLICT (id) DO UPDATE SET
+  name         = 'Super Admin',
   role         = 'super_admin',
   is_protected = TRUE,
   full_name    = 'Super Admin',
