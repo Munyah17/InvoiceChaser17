@@ -333,9 +333,10 @@ export const useStore = create(
     }),
     {
       name: 'invoice-chaser-storage',
-      partialize: (state) => ({ 
+      partialize: (state) => ({
         settings: state.settings,
-        templates: state.templates 
+        templates: state.templates,
+        userRole: state.userRole,
       }),
     }
   )

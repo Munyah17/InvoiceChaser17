@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useStore } from '../store/useStore'
 import { formatDate } from '../utils/dateFormat'
+import { canAccessAdmin } from '../utils/rbac'
 
 // Tabs — super_admin sees everything; admin sees business ops (no platform config / feature flags / roles)
 const SUPER_TABS = [
@@ -180,7 +181,7 @@ export default function AdminPage() {
   const [announcementSent, setAnnouncementSent] = useState(false)
 
   useEffect(() => {
-    if (userRole === 'super_admin') setAuthed(true)
+    if (canAccessAdmin(userRole)) setAuthed(true)
   }, [userRole])
 
   const fetchAll = useCallback(async () => {
@@ -262,8 +263,8 @@ export default function AdminPage() {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
       if (error) throw error
-      const { data: row } = await supabase.from('users').select('is_admin, role').eq('id', data.user.id).single()
-      if (!row?.is_admin && row?.role !== 'super_admin') throw new Error('Access denied.')
+      const { data: row } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
+      if (!['admin', 'super_admin'].includes(row?.role)) throw new Error('Access denied — staff accounts only.')
       setAuthed(true)
     } catch (err) { setLoginError(err.message) }
     finally { setLoginLoading(false) }
