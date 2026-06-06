@@ -176,7 +176,8 @@ export default function Dashboard() {
             <span className="font-semibold text-xs text-neutral-900 dark:text-white">Recent Invoices</span>
             <Link to="/app/invoices" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">View all</Link>
           </div>
-          <table className="w-full">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[480px]">
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
               {invoices.slice(0, 5).map((inv) => (
                 <tr key={inv.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
@@ -209,6 +210,7 @@ export default function Dashboard() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
 
         {/* Reminders */}

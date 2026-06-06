@@ -250,12 +250,12 @@ export default function InvoicesPage() {
     <div className="animate-fade-in">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="flex items-start justify-between mb-5 gap-4">
+      <div className="flex flex-wrap items-start justify-between mb-5 gap-3">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Invoices</h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{invoices.length} total</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={downloadTemplate} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">
             CSV Template
           </button>
@@ -281,7 +281,7 @@ export default function InvoicesPage() {
 
       {/* Toolbar */}
       <div className="flex gap-2 mb-4 items-center flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-[300px]">
+        <div className="relative w-full sm:flex-1 sm:min-w-[200px] sm:max-w-[300px]">
           <svg viewBox="0 0 24 24" className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 stroke-neutral-400 fill-none stroke-2">
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -317,7 +317,8 @@ export default function InvoicesPage() {
 
       {/* Table */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50">
               <th className="w-8 px-4 py-2.5 text-left border-b border-neutral-200 dark:border-neutral-800">
@@ -371,6 +372,7 @@ export default function InvoicesPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       <NewInvoiceModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleCreateInvoice} />

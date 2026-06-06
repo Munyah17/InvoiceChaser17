@@ -148,7 +148,7 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <div className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full">
+        <div className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full overflow-x-hidden min-w-0">
           <Outlet />
         </div>
       </main>

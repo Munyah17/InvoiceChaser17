@@ -128,7 +128,7 @@ export default function RemindersPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
           { label: 'Total', value: reminders.length, color: 'bg-neutral-900 text-white' },
           { label: 'Pending', value: reminders.filter(r => r.status === 'pending').length, color: 'bg-amber-50 text-amber-700 border border-amber-200' },
@@ -217,9 +217,9 @@ export default function RemindersPage() {
             <span>Use variables: <code className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono">{'{{invoice_number}}'}</code> <code className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono">{'{{customer_name}}'}</code> <code className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono">{'{{amount}}'}</code> <code className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono">{'{{due_date}}'}</code></span>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             {/* Template Sidebar */}
-            <div className="flex flex-col gap-1.5 min-w-[180px]">
+            <div className="flex flex-col gap-1.5 sm:min-w-[180px]">
               {templateButtons.map((btn) => (
                 <button
                   key={btn.key}
