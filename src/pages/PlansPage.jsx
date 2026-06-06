@@ -113,7 +113,7 @@ export default function PlansPage() {
 
       {/* Plans Grid */}
       <h2 className="font-semibold text-sm text-neutral-900 dark:text-white mb-3">Choose a Plan</h2>
-      <div className="grid grid-cols-2 gap-3 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
         {/* Row 1: Professional (Popular) + Business */}
         {PLANS.filter(p => p.id === 'professional' || p.id === 'business').map((plan) => (
           <div key={plan.id} className={`bg-white dark:bg-neutral-900 border ${plan.popular ? 'border-neutral-900 dark:border-white' : 'border-neutral-200 dark:border-neutral-800'} rounded-xl p-4`}>
