@@ -11,9 +11,9 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { setUser, setSession } = useStore()
+  const { setUser, setSession, loadRole } = useStore()
 
-  const redirectUrl = searchParams.get('redirect') || '/app/dashboard'
+  const redirectUrl = searchParams.get('redirect') || null
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -27,17 +27,26 @@ export default function LoginPage() {
     }
 
     const { data, error: signInError } = await signIn(email, password)
-    setLoading(false)
 
     if (signInError) {
       setError(signInError.message)
+      setLoading(false)
       return
     }
 
-    // Free signup - allow login without subscription check
     setUser(data.user)
     setSession(data.session)
-    navigate(redirectUrl)
+
+    // Load role and route to the right dashboard
+    const role = await loadRole()
+    if (redirectUrl) {
+      navigate(redirectUrl)
+    } else if (role === 'super_admin' || role === 'admin') {
+      navigate('/app/admin')
+    } else {
+      navigate('/app/dashboard')
+    }
+    setLoading(false)
   }
 
   return (

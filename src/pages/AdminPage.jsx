@@ -143,12 +143,6 @@ export default function AdminPage() {
   const navigate = useNavigate()
   const { userRole } = useStore()
 
-  const [authed, setAuthed]               = useState(false)
-  const [loginEmail, setLoginEmail]       = useState('')
-  const [loginPassword, setLoginPassword] = useState('')
-  const [loginError, setLoginError]       = useState('')
-  const [loginLoading, setLoginLoading]   = useState(false)
-
   const [activeTab, setActiveTab] = useState('overview')
   const [loading, setLoading]     = useState(true)
 
@@ -179,10 +173,6 @@ export default function AdminPage() {
 
   const [announcement, setAnnouncement] = useState('')
   const [announcementSent, setAnnouncementSent] = useState(false)
-
-  useEffect(() => {
-    if (canAccessAdmin(userRole)) setAuthed(true)
-  }, [userRole])
 
   const fetchAll = useCallback(async () => {
     setLoading(true)
@@ -254,21 +244,7 @@ export default function AdminPage() {
     }
   }, [])
 
-  useEffect(() => { if (authed) fetchAll() }, [authed, fetchAll])
-
-  const handleLogin = async (e) => {
-    e.preventDefault()
-    setLoginError('')
-    setLoginLoading(true)
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: loginEmail, password: loginPassword })
-      if (error) throw error
-      const { data: row } = await supabase.from('profiles').select('role').eq('id', data.user.id).single()
-      if (!['admin', 'super_admin'].includes(row?.role)) throw new Error('Access denied — staff accounts only.')
-      setAuthed(true)
-    } catch (err) { setLoginError(err.message) }
-    finally { setLoginLoading(false) }
-  }
+  useEffect(() => { fetchAll() }, [fetchAll])
 
   const handleUpdateUserPlan = async (userId, newPlan) => {
     setSavingUser(userId)
@@ -296,37 +272,6 @@ export default function AdminPage() {
     (u.full_name || u.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  // ── Login gate ───────────────────────────────────────────────────────────
-  if (!authed) {
-    return (
-      <div className="min-h-screen bg-neutral-50 dark:bg-neutral-950 flex items-center justify-center p-6">
-        <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 p-8 w-full max-w-sm">
-          <div className="text-center mb-6">
-            <div className="w-12 h-12 bg-neutral-900 dark:bg-white rounded-xl flex items-center justify-center mx-auto mb-3">
-              <svg viewBox="0 0 24 24" className="w-6 h-6 stroke-white dark:stroke-neutral-950 fill-none stroke-2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
-            </div>
-            <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Platform Admin</h1>
-            <p className="text-xs text-neutral-500 mt-1">InvoiceChaser Operations Portal</p>
-          </div>
-          <form onSubmit={handleLogin} className="space-y-3">
-            <input type="email" required value={loginEmail} onChange={e => setLoginEmail(e.target.value)} placeholder="admin@invoicechaser.com"
-              className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white text-sm outline-none" />
-            <input type="password" required value={loginPassword} onChange={e => setLoginPassword(e.target.value)} placeholder="••••••••"
-              className="w-full px-3 py-2 border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white text-sm outline-none" />
-            {loginError && <p className="text-red-500 text-xs">{loginError}</p>}
-            <button type="submit" disabled={loginLoading}
-              className="w-full py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg text-sm font-medium hover:opacity-90 disabled:opacity-50">
-              {loginLoading ? 'Signing in…' : 'Access Portal'}
-            </button>
-          </form>
-          <p className="text-center mt-4">
-            <button onClick={() => navigate('/app/dashboard')} className="text-xs text-neutral-500 hover:underline">← Back to app</button>
-          </p>
-        </div>
-      </div>
-    )
-  }
-
   // ── Admin Portal ─────────────────────────────────────────────────────────
   return (
     <div className="animate-fade-in w-full">
@@ -341,16 +286,12 @@ export default function AdminPage() {
             </div>
             <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Platform Admin</h1>
             <span className="text-[9px] font-bold bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 px-2 py-0.5 rounded-full uppercase tracking-wider">
-              Super Admin
-            </span>
-            <span className="text-[9px] font-bold bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-2.5 h-2.5">
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/>
-              </svg>
-              Lifetime Access
+              {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
             </span>
           </div>
-          <p className="text-xs text-neutral-500">Full platform control · Permanent owner access · No subscription required</p>
+          <p className="text-xs text-neutral-500">
+            {userRole === 'super_admin' ? 'Full platform control · Permanent owner access' : 'Operations access · Manage users and subscriptions'}
+          </p>
         </div>
         <button
           onClick={fetchAll}

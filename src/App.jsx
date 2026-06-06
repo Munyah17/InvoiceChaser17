@@ -111,7 +111,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="wallet" element={<WalletPage />} />
           <Route path="api-keys" element={<APIKeysPage />} />
-          <Route path="admin" element={<AdminPage />} />
+          <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         </Route>
         
         {/* Admin route */}

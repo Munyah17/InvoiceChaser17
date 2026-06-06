@@ -13,11 +13,13 @@ import { formatDate } from '../utils/dateFormat'
 export default function Dashboard() {
   const { user, userRole, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading } = useStore()
 
-  // Super admin goes straight to admin portal
-  if (userRole === 'super_admin') return <Navigate to="/app/admin" replace />
+  // All hooks must come before any conditional returns
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState(null)
   const [currentDate, setCurrentDate] = useState('')
+
+  // Staff accounts (admin / super_admin) go to their own portal — not the client dashboard
+  if (userRole === 'super_admin' || userRole === 'admin') return <Navigate to="/app/admin" replace />
 
   useEffect(() => {
     const d = new Date()
