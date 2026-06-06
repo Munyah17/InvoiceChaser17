@@ -4,7 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { signOut } from '../lib/supabase'
 import { canAccessAdmin } from '../utils/rbac'
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, onClose }) {
   const { user, settings, logout, userRole } = useStore()
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
@@ -23,11 +23,12 @@ export default function Sidebar() {
     { path: '/app/boq', label: 'BOQ', icon: 'calculator' },
     { path: '/app/bom', label: 'BOM', icon: 'layers' },
     { path: '/app/wallet', label: 'Wallet', icon: 'wallet' },
+    { path: '/app/api-keys', label: 'API Keys', icon: 'api-key' },
     { path: '/app/plans', label: 'Upgrade Plan', icon: 'crown' },
     { path: '/app/terms', label: 'Terms', icon: 'shield' },
     { path: '/app/profile', label: 'Profile', icon: 'user' },
     { path: '/app/settings', label: 'Settings', icon: 'settings' },
-    ...(canAccessAdmin(userRole) ? [{ path: '/admin', label: 'Admin', icon: 'lock' }] : []),
+    ...(canAccessAdmin(userRole) ? [{ path: '/app/admin', label: 'Admin', icon: 'lock' }] : []),
   ]
 
   const icons = {
@@ -119,6 +120,11 @@ export default function Sidebar() {
         <path d="M20 12V22H4V12" /><path d="M22 7H2v5h20V7z" /><path d="M12 22V7" /><path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" /><path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
       </svg>
     ),
+    'api-key': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+      </svg>
+    ),
   }
 
   const userInitial = settings?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
@@ -131,26 +137,43 @@ export default function Sidebar() {
     navigate('/login')
   }
 
+  const handleNavClick = () => {
+    if (onClose) onClose()
+  }
+
   return (
-    <aside className="fixed top-0 left-0 w-[200px] h-screen bg-neutral-950 flex flex-col z-10 border-r border-neutral-800">
-      {/* Logo */}
+    <aside
+      className={`fixed top-0 left-0 w-[200px] h-screen bg-neutral-950 flex flex-col z-30 border-r border-neutral-800 transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
+    >
+      {/* Logo + close button on mobile */}
       <div className="flex items-center gap-2.5 px-4 py-3.5 border-b border-neutral-800">
         <div className="w-6 h-6 bg-white rounded-md flex items-center justify-center flex-shrink-0">
           <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-neutral-950">
             <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
           </svg>
         </div>
-        <span className="font-semibold text-white text-xs tracking-tight">InvoiceChaser</span>
+        <span className="font-semibold text-white text-xs tracking-tight flex-1">InvoiceChaser</span>
+        <button
+          onClick={onClose}
+          className="lg:hidden text-neutral-500 hover:text-white transition-colors p-0.5"
+          aria-label="Close menu"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5">
+      <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path
           return (
             <Link
               key={item.path}
               to={item.path}
+              onClick={handleNavClick}
               className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
                 isActive
                   ? 'bg-white text-neutral-950'
@@ -195,7 +218,11 @@ export default function Sidebar() {
           Sign Out
         </button>
 
-        <Link to="/app/profile" className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors">
+        <Link
+          to="/app/profile"
+          onClick={handleNavClick}
+          className="flex items-center gap-2.5 px-2.5 py-2 rounded-md bg-neutral-900 border border-neutral-800 hover:border-neutral-700 transition-colors"
+        >
           <div className="w-6 h-6 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-[10px] font-semibold text-neutral-300 flex-shrink-0">
             {userInitial}
           </div>

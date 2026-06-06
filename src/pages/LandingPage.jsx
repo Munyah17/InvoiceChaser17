@@ -1,15 +1,19 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import Button from '../components/Button'
 import { useTheme } from '../context/ThemeContext'
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme()
+  const [menuOpen, setMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-white dark:bg-neutral-950">
       {/* Header */}
       <header className="bg-white/80 dark:bg-neutral-950/80 backdrop-blur-lg border-b border-neutral-200 dark:border-neutral-800/50 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          {/* Logo */}
+          <div className="flex items-center gap-3 flex-shrink-0">
             <div className="w-8 h-8 bg-gradient-to-br from-white to-neutral-300 rounded-xl flex items-center justify-center shadow-lg">
               <svg viewBox="0 0 24 24" className="w-4 h-4 fill-neutral-950 dark:fill-white">
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
@@ -17,19 +21,18 @@ export default function LandingPage() {
             </div>
             <span className="font-display font-bold text-neutral-950 dark:text-white text-base">InvoiceChaser</span>
           </div>
+
+          {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-8">
             <a href="#features" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">Features</a>
             <a href="#how-it-works" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">How It Works</a>
             <a href="#pricing" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">Pricing</a>
             <a href="#faq" className="text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">FAQ</a>
           </nav>
-          <div className="flex items-center gap-3">
-            <Link to="/login">
-              <Button variant="ghost" className="text-neutral-950 dark:text-white hover:text-neutral-600 dark:hover:text-neutral-300 font-medium border border-neutral-800">Log in</Button>
-            </Link>
-            <Link to="/register">
-              <Button variant="primary" className="font-semibold">Get Started</Button>
-            </Link>
+
+          {/* Right: theme + CTA + hamburger */}
+          <div className="flex items-center gap-2">
+            {/* Theme toggle */}
             <button
               onClick={toggleTheme}
               className="p-2 rounded-lg text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors border border-neutral-200 dark:border-neutral-700"
@@ -45,7 +48,59 @@ export default function LandingPage() {
                 </svg>
               )}
             </button>
+
+            {/* Desktop CTA */}
+            <Link to="/login" className="hidden md:block">
+              <Button variant="primary" className="font-semibold">Get Started</Button>
+            </Link>
+
+            {/* Mobile hamburger */}
+            <button
+              onClick={() => setMenuOpen(v => !v)}
+              className="md:hidden p-2 rounded-lg text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors"
+              aria-label="Toggle menu"
+            >
+              {menuOpen ? (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-5 h-5">
+                  <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+                </svg>
+              )}
+            </button>
           </div>
+        </div>
+
+        {/* Mobile dropdown nav */}
+        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${menuOpen ? 'max-h-80 border-t border-neutral-200 dark:border-neutral-800' : 'max-h-0'}`}>
+          <nav className="px-4 py-3 flex flex-col gap-1 bg-white dark:bg-neutral-950">
+            {[
+              { href: '#features', label: 'Features' },
+              { href: '#how-it-works', label: 'How It Works' },
+              { href: '#pricing', label: 'Pricing' },
+              { href: '#faq', label: 'FAQ' },
+            ].map(item => (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={() => setMenuOpen(false)}
+                className="px-3 py-2.5 text-sm font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-900 rounded-lg transition-colors"
+              >
+                {item.label}
+              </a>
+            ))}
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 mt-1">
+              <Link
+                to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center w-full px-4 py-2.5 bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
+              >
+                Get Started
+              </Link>
+            </div>
+          </nav>
         </div>
       </header>
 

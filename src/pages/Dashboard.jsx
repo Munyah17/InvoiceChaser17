@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import Button from '../components/Button'
 import Badge from '../components/Badge'
@@ -11,7 +11,10 @@ import NewInvoiceModal from '../components/NewInvoiceModal'
 import { formatDate } from '../utils/dateFormat'
 
 export default function Dashboard() {
-  const { user, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading } = useStore()
+  const { user, userRole, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading } = useStore()
+
+  // Super admin goes straight to admin portal
+  if (userRole === 'super_admin') return <Navigate to="/app/admin" replace />
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState(null)
   const [currentDate, setCurrentDate] = useState('')
@@ -127,7 +130,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats - large clean numbers */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
           <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Total Revenue</div>
           <div className="font-semibold text-2xl text-neutral-900 dark:text-white">{fmt(paidRev)}</div>
@@ -166,9 +169,9 @@ export default function Dashboard() {
       </div>
 
       {/* Two columns: Invoices + Reminders */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Recent Invoices */}
-        <div className="col-span-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
+        <div className="lg:col-span-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
             <span className="font-semibold text-xs text-neutral-900 dark:text-white">Recent Invoices</span>
             <Link to="/app/invoices" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">View all</Link>

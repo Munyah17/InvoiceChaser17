@@ -67,6 +67,8 @@ const parseCSV = (text) => {
   return items
 }
 
+const EMPTY_CUSTOM_BOQ = { name: '', category: '', quantity: 1, unit: 'each', price: '', shop: 'Other' }
+
 export default function BOQPage() {
   const { userPlan, canGenerateBOQ, incrementBOQGeneration } = useStore()
   const [items, setItems] = useState([])
@@ -78,6 +80,8 @@ export default function BOQPage() {
   const [discipline, setDiscipline] = useState('')
   const [logo, setLogo] = useState(null)
   const fileInputRef = useRef(null)
+  const [customForm, setCustomForm] = useState(EMPTY_CUSTOM_BOQ)
+  const [customShopInput, setCustomShopInput] = useState('')
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0]

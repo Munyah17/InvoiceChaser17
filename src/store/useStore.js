@@ -53,10 +53,11 @@ export const useStore = create(
       
       canGenerateBOQ: () => {
         const state = get()
+        if (state.userRole === 'super_admin') return true
         const plan = state.userPlan || 'free'
         const limits = { free: 1, starter: 5, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
         const limit = limits[plan] || 1
-        
+
         if (limit === Infinity) return true
         
         const now = new Date()
@@ -84,10 +85,11 @@ export const useStore = create(
       
       canGenerateInvoice: () => {
         const state = get()
+        if (state.userRole === 'super_admin') return true
         const plan = state.userPlan || 'free'
         const limits = { free: 1, starter: Infinity, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
         const limit = limits[plan] || 1
-        
+
         if (limit === Infinity) return true
         
         const now = new Date()
@@ -115,10 +117,11 @@ export const useStore = create(
       
       canGenerateBOM: () => {
         const state = get()
+        if (state.userRole === 'super_admin') return true
         const plan = state.userPlan || 'free'
         const limits = { free: 1, starter: 5, professional: Infinity, business: Infinity, lifetime: Infinity, enterprise: Infinity }
         const limit = limits[plan] || 1
-        
+
         if (limit === Infinity) return true
         
         const now = new Date()
@@ -145,6 +148,7 @@ export const useStore = create(
       },
       
       canStore: (docType) => {
+        if (get().userRole === 'super_admin') return true
         const plan = get().userPlan || 'free'
         const perms = {
           free: ['invoices', 'boq', 'bom'],

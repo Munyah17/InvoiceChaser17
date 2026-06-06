@@ -29,6 +29,8 @@ import DebitNotePage from './pages/DebitNotePage'
 import CreditNotePage from './pages/CreditNotePage'
 import AdminPage from './pages/AdminPage'
 import ProfilePage from './pages/ProfilePage'
+import WalletPage from './pages/WalletPage'
+import APIKeysPage from './pages/APIKeysPage'
 
 // Layout
 import AppLayout from './components/AppLayout'
@@ -107,6 +109,9 @@ function App() {
           <Route path="debit-note" element={<DebitNotePage />} />
           <Route path="credit-note" element={<CreditNotePage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="wallet" element={<WalletPage />} />
+          <Route path="api-keys" element={<APIKeysPage />} />
+          <Route path="admin" element={<AdminPage />} />
         </Route>
         
         {/* Admin route */}

@@ -25,7 +25,16 @@ dist-ssr
 
 # Environment variables
 .env
+.env.example
 .env.local
 .env.*.local
 .env.production
 .env.development
+
+# Scripts containing credentials (local tooling only)
+scripts/
+
+# Agent skills and Claude memory (local tooling only)
+.agents/
+.claude/
+skills-lock.json

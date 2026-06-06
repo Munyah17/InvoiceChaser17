@@ -63,6 +63,8 @@ const DISCIPLINES = [
   'School Projects',
 ]
 
+const EMPTY_CUSTOM = { name: '', category: '', quantity: 1, unit: 'each', price: '', shop: 'Other' }
+
 export default function BOMPage() {
   const { userPlan } = useStore()
   const [items, setItems] = useState([])
@@ -71,6 +73,8 @@ export default function BOMPage() {
   const [discipline, setDiscipline] = useState('')
   const [logo, setLogo] = useState(null)
   const fileInputRef = useRef(null)
+  const [customForm, setCustomForm] = useState(EMPTY_CUSTOM)
+  const [customShopInput, setCustomShopInput] = useState('')
 
   const handleLogoUpload = (e) => {
     const file = e.target.files[0]
@@ -106,6 +110,22 @@ export default function BOMPage() {
 
   const handleAddCustomItem = () => {
     setItems([...items, { id: `custom-${Date.now()}`, name: 'Custom Item', quantity: 1, unit: 'each', price: 0, category: 'Custom', shop: 'Other' }])
+  }
+
+  const handleSubmitCustom = () => {
+    if (!customForm.name.trim()) return
+    const shop = customForm.shop === 'Other' && customShopInput.trim() ? customShopInput.trim() : customForm.shop
+    setItems([...items, {
+      id: `custom-${Date.now()}`,
+      name: customForm.name.trim(),
+      category: customForm.category.trim() || 'Custom',
+      quantity: parseFloat(customForm.quantity) || 1,
+      unit: customForm.unit.trim() || 'each',
+      price: parseFloat(customForm.price) || 0,
+      shop,
+    }])
+    setCustomForm(EMPTY_CUSTOM)
+    setCustomShopInput('')
   }
 
   const handleUpdateItem = (index, field, value) => {
@@ -300,6 +320,54 @@ export default function BOMPage() {
         </div>
       </div>
 
+      {/* Custom Material Entry Form */}
+      <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4 mb-4">
+        <div className="flex items-center gap-2 mb-3">
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-neutral-500 fill-none stroke-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <h3 className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">Add Custom Material</h3>
+          <span className="text-[10px] text-neutral-400">Type in any material not in the database</span>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+          <input type="text" placeholder="Material name *" value={customForm.name}
+            onChange={e => setCustomForm(f => ({...f, name: e.target.value}))}
+            className="col-span-2 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400" />
+          <input type="text" placeholder="Category (e.g. Cement)" value={customForm.category}
+            onChange={e => setCustomForm(f => ({...f, category: e.target.value}))}
+            className="px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400" />
+          <div className="flex gap-1">
+            <input type="number" placeholder="Qty" min="0" value={customForm.quantity}
+              onChange={e => setCustomForm(f => ({...f, quantity: e.target.value}))}
+              className="w-16 px-2 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" />
+            <input type="text" placeholder="Unit" value={customForm.unit}
+              onChange={e => setCustomForm(f => ({...f, unit: e.target.value}))}
+              className="flex-1 px-2 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" />
+          </div>
+          <input type="number" placeholder="Price ($)" min="0" step="0.01" value={customForm.price}
+            onChange={e => setCustomForm(f => ({...f, price: e.target.value}))}
+            className="px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400" />
+          <div className="flex gap-1">
+            {!ZIMBABWE_SHOPS.slice(0, -1).includes(customForm.shop) ? (
+              <input type="text" placeholder="Shop name" value={customShopInput}
+                onChange={e => setCustomShopInput(e.target.value)}
+                onBlur={() => { if (!customShopInput.trim()) setCustomForm(f => ({...f, shop: 'Other'})) }}
+                className="flex-1 px-2 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none placeholder:text-neutral-400" />
+            ) : (
+              <select value={customForm.shop} onChange={e => {
+                if (e.target.value === '__custom__') { setCustomForm(f => ({...f, shop: ''})); setCustomShopInput('') }
+                else setCustomForm(f => ({...f, shop: e.target.value}))
+              }} className="flex-1 px-2 py-2 text-[10px] border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none">
+                {ZIMBABWE_SHOPS.map(s => <option key={s} value={s}>{s}</option>)}
+                <option value="__custom__">Type custom…</option>
+              </select>
+            )}
+            <button onClick={handleSubmitCustom} disabled={!customForm.name.trim()}
+              className="px-3 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 text-xs font-semibold rounded-lg hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap">
+              + Add
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Price Comparison Button */}
       {items.length > 0 && (
         <div className="mb-4 bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 rounded-lg p-3">
@@ -342,15 +410,25 @@ export default function BOMPage() {
             {items.length > 0 ? items.map((item, index) => (
               <tr key={item.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
                 <td className="px-3 py-2"><input type="text" className="w-full px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none" value={item.name} onChange={e => handleUpdateItem(index, 'name', e.target.value)} /></td>
-                <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">{item.category}</td>
+                <td className="px-3 py-2"><input type="text" className="w-full px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none" value={item.category} onChange={e => handleUpdateItem(index, 'category', e.target.value)} /></td>
                 <td className="px-3 py-2"><input type="number" className="w-16 px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none" value={item.quantity} onChange={e => handleUpdateItem(index, 'quantity', parseFloat(e.target.value) || 0)} /></td>
-                <td className="px-3 py-2 text-xs text-neutral-500 dark:text-neutral-400">{item.unit}</td>
+                <td className="px-3 py-2"><input type="text" className="w-14 px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none" value={item.unit} onChange={e => handleUpdateItem(index, 'unit', e.target.value)} /></td>
                 <td className="px-3 py-2"><input type="number" className="w-20 px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-xs outline-none" value={item.price.toFixed(2)} onChange={e => handleUpdateItem(index, 'price', parseFloat(e.target.value) || 0)} /></td>
                 <td className="px-3 py-2 text-xs font-semibold text-neutral-900 dark:text-white text-right">${(item.quantity * item.price).toFixed(2)}</td>
                 <td className="px-3 py-2">
-                  <select className="w-full px-1 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-[10px] outline-none" value={item.shop} onChange={e => handleUpdateItem(index, 'shop', e.target.value)}>
-                    {ZIMBABWE_SHOPS.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  {!ZIMBABWE_SHOPS.includes(item.shop) ? (
+                    <div className="flex items-center gap-1">
+                      <input type="text" value={item.shop} onChange={e => handleUpdateItem(index, 'shop', e.target.value)}
+                        className="flex-1 px-2 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-[10px] outline-none" placeholder="Shop name" />
+                      <button onClick={() => handleUpdateItem(index, 'shop', 'Other')} className="text-neutral-400 hover:text-neutral-600 text-[10px] px-1" title="Pick from list">↩</button>
+                    </div>
+                  ) : (
+                    <select className="w-full px-1 py-1 border border-neutral-200 dark:border-neutral-700 rounded bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white text-[10px] outline-none"
+                      value={item.shop} onChange={e => { if (e.target.value === '__custom__') handleUpdateItem(index, 'shop', ''); else handleUpdateItem(index, 'shop', e.target.value) }}>
+                      {ZIMBABWE_SHOPS.map(s => <option key={s} value={s}>{s}</option>)}
+                      <option value="__custom__">Type custom…</option>
+                    </select>
+                  )}
                 </td>
                 <td className="px-3 py-2 text-center"><button onClick={() => handleRemoveItem(index)} className="inline-flex items-center p-1 rounded text-neutral-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-500 transition-colors"><svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2"><polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" /></svg></button></td>
               </tr>
