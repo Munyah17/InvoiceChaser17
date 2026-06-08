@@ -39,6 +39,11 @@ export const useStore = create(
       invoiceGenerations: { count: 0, weekStart: null },
       bomGenerations: { count: 0, weekStart: null },
       loading: false,
+      // In-memory fetch timestamps — not persisted, reset on page load
+      _invoicesTs: 0,
+      _customersTs: 0,
+      _remindersTs: 0,
+      _profileTs: 0,
       
       setUser: (user) => set({ user }),
       setSession: (session) => set({ session }),
@@ -161,46 +166,45 @@ export const useStore = create(
         return (perms[plan] || []).includes(docType)
       },
       
-      // Load data from Supabase
+      // Load data from Supabase — 2 min in-memory cache prevents re-fetching on navigation
       loadInvoices: async (userId) => {
+        const { invoices, _invoicesTs } = get()
+        if (invoices.length > 0 && Date.now() - _invoicesTs < 120_000) return { data: invoices, error: null }
         set({ loading: true })
         const { data, error } = await api.getInvoices(userId)
-        if (!error && data) {
-          set({ invoices: data })
-        }
+        if (!error && data) set({ invoices: data, _invoicesTs: Date.now() })
         set({ loading: false })
         return { data, error }
       },
-      
+
       loadCustomers: async (userId) => {
+        const { customers, _customersTs } = get()
+        if (customers.length > 0 && Date.now() - _customersTs < 120_000) return { data: customers, error: null }
         set({ loading: true })
         const { data, error } = await api.getCustomers(userId)
-        if (!error && data) {
-          set({ customers: data })
-        }
+        if (!error && data) set({ customers: data, _customersTs: Date.now() })
         set({ loading: false })
         return { data, error }
       },
-      
+
       loadReminders: async (userId) => {
+        const { reminders, _remindersTs } = get()
+        if (reminders.length > 0 && Date.now() - _remindersTs < 120_000) return { data: reminders, error: null }
         set({ loading: true })
         const { data, error } = await api.getReminders(userId)
-        if (!error && data) {
-          set({ reminders: data })
-        }
+        if (!error && data) set({ reminders: data, _remindersTs: Date.now() })
         set({ loading: false })
         return { data, error }
       },
-      
+
       loadProfile: async (userId) => {
+        const { _profileTs, settings } = get()
+        if (settings.full_name && Date.now() - _profileTs < 120_000) return { data: settings, error: null }
         const { data, error } = await api.getProfile(userId)
         if (!error && data) {
-          set({ 
-            settings: {
-              full_name: data.full_name || '',
-              company_name: data.company_name || '',
-              email: data.email || '',
-            }
+          set({
+            settings: { full_name: data.full_name || '', company_name: data.company_name || '', email: data.email || '' },
+            _profileTs: Date.now(),
           })
         }
         return { data, error }
@@ -318,7 +322,7 @@ export const useStore = create(
       
       logout: () => {
         localStorage.removeItem('invoice-chaser-storage')
-        set({ user: null, session: null, userRole: null, invoices: [], customers: [], reminders: [] })
+        set({ user: null, session: null, userRole: null, invoices: [], customers: [], reminders: [], _invoicesTs: 0, _customersTs: 0, _remindersTs: 0, _profileTs: 0 })
       },
       
       loadRole: async () => {

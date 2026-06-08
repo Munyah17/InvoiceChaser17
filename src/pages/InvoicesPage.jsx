@@ -23,7 +23,7 @@ export default function InvoicesPage() {
     if (user) {
       loadInvoices(user.id)
     }
-  }, [user])
+  }, [user?.id])
 
   const fmt = (n, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c }).format(n)
   const fmtDate = (d) => formatDate(d)

@@ -29,7 +29,7 @@ export default function APIKeysPage() {
 
   useEffect(() => {
     if (user) loadData()
-  }, [user])
+  }, [user?.id])
 
   const loadData = async () => {
     if (!user) return

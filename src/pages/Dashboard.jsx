@@ -13,23 +13,21 @@ import { formatDate } from '../utils/dateFormat'
 export default function Dashboard() {
   const { user, userRole, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading } = useStore()
 
-  // All hooks must come before any conditional returns
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState(null)
   const [currentDate, setCurrentDate] = useState('')
 
-  // Staff accounts (admin / super_admin) go to their own portal — not the client dashboard
-  if (userRole === 'super_admin' || userRole === 'admin') return <Navigate to="/app/admin" replace />
-
+  // ALL hooks before any conditional return
   useEffect(() => {
-    const d = new Date()
-    setCurrentDate(formatDate(d))
-    
-    if (user) {
+    setCurrentDate(formatDate(new Date()))
+    if (user?.id) {
       loadInvoices(user.id)
       loadReminders(user.id)
     }
-  }, [user])
+  }, [user?.id])
+
+  // Staff accounts go to their portal — conditional return after all hooks
+  if (userRole === 'super_admin' || userRole === 'admin') return <Navigate to="/app/admin" replace />
 
   const fmt = (n, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c }).format(n)
   const fmtDate = (d) => formatDate(d)

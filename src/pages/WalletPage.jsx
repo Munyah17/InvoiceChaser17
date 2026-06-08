@@ -26,7 +26,7 @@ export default function WalletPage() {
 
   useEffect(() => {
     if (user) loadWallet()
-  }, [user])
+  }, [user?.id])
 
   const loadWallet = async () => {
     if (!user) return
@@ -46,11 +46,11 @@ export default function WalletPage() {
         return
       }
 
-      // No wallet row yet — create one
+      // No wallet row yet — upsert prevents race-condition duplicates
       if (!w && fetchError?.code === 'PGRST116') {
         const { data: created } = await supabase
           .from('wallets')
-          .insert({ user_id: user.id, balance: 0, currency: 'USD' })
+          .upsert({ user_id: user.id, balance: 0, currency: 'USD' }, { onConflict: 'user_id', ignoreDuplicates: true })
           .select()
           .single()
         w = created
@@ -60,7 +60,7 @@ export default function WalletPage() {
 
       const { data: txns } = await supabase
         .from('wallet_transactions')
-        .select('*')
+        .select('id, amount, type, description, reference, created_at')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(50)

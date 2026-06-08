@@ -16,7 +16,7 @@ export default function RemindersPage() {
     if (user) {
       loadReminders(user.id)
     }
-  }, [user])
+  }, [user?.id])
 
   const fmtDate = (d) => formatDate(d)
 

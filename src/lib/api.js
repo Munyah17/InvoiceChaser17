@@ -27,7 +27,7 @@ export const getUserRole = async () => {
 export const getProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select('id, full_name, email, company_name, role, plan, created_at')
     .eq('id', userId)
     .single()
   return { data, error }
@@ -47,9 +47,10 @@ export const updateProfile = async (userId, updates) => {
 export const getInvoices = async (userId) => {
   const { data, error } = await supabase
     .from('invoices')
-    .select('*')
+    .select('id, invoice_number, customer_name, customer_email, amount, currency, status, due_date, description, notes, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+    .limit(200)
   return { data, error }
 }
 
@@ -93,9 +94,10 @@ export const getInvoiceById = async (id) => {
 export const getCustomers = async (userId) => {
   const { data, error } = await supabase
     .from('customers')
-    .select('*')
+    .select('id, name, email, company, phone, created_at')
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
+    .limit(200)
   return { data, error }
 }
 
@@ -138,29 +140,12 @@ export const getCustomerByEmail = async (userId, email) => {
 
 // Reminders API
 export const getReminders = async (userId) => {
-  // First get invoice IDs for this user, then query reminders
-  const { data: invoiceData } = await supabase
-    .from('invoices')
-    .select('id')
-    .eq('user_id', userId)
-
-  const invoiceIds = invoiceData?.map(i => i.id) || []
-  if (invoiceIds.length === 0) return { data: [], error: null }
-
   const { data, error } = await supabase
     .from('reminders')
-    .select(`
-      *,
-      invoices (
-        invoice_number,
-        customer_name,
-        customer_email,
-        amount,
-        due_date
-      )
-    `)
-    .in('invoice_id', invoiceIds)
+    .select('id, type, status, scheduled_at, sent_at, invoice_id, invoices(invoice_number, customer_name, customer_email, amount, due_date)')
+    .eq('user_id', userId)
     .order('scheduled_at', { ascending: false })
+    .limit(200)
   return { data, error }
 }
 

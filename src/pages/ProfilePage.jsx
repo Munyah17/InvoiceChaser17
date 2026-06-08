@@ -39,7 +39,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) loadProfile(user.id)
-  }, [user])
+  }, [user?.id])
 
   const planLabel = userPlan || 'Free'
   const planKey = (userPlan || 'free').toLowerCase()

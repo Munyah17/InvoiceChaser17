@@ -32,7 +32,7 @@ export default function SettingsPage() {
     if (user) {
       loadProfile(user.id)
     }
-  }, [user])
+  }, [user?.id])
 
   useEffect(() => {
     setFormData(prev => ({

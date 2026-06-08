@@ -16,7 +16,7 @@ export default function CustomersPage() {
     if (user) {
       loadCustomers(user.id)
     }
-  }, [user])
+  }, [user?.id])
 
   // Merge customers with invoice data
   const mergedCustomers = {}
