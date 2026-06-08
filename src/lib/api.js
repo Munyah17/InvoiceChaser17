@@ -2,17 +2,18 @@ import { supabase } from './supabase'
 import { resolveRole } from '../utils/rbac'
 
 // Role resolution — prefers profiles.role, falls back to users.is_admin
+// Returns { role, plan } so callers can set both in one fetch
 export const getUserRole = async () => {
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return null
+  if (!user) return { role: null, plan: 'free' }
 
   const { data: profileData } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, plan')
     .eq('id', user.id)
     .single()
 
-  if (profileData?.role) return profileData.role
+  if (profileData?.role) return { role: profileData.role, plan: profileData.plan || 'free' }
 
   const { data: userData } = await supabase
     .from('users')
@@ -20,7 +21,7 @@ export const getUserRole = async () => {
     .eq('id', user.id)
     .single()
 
-  return resolveRole(null, userData?.is_admin)
+  return { role: resolveRole(null, userData?.is_admin), plan: 'free' }
 }
 
 // Profile API

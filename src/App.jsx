@@ -114,12 +114,8 @@ function App() {
           <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
         </Route>
         
-        {/* Admin route */}
-        <Route path="/admin" element={
-          <AdminRoute>
-            <AdminPage />
-          </AdminRoute>
-        } />
+        {/* Redirect bare /admin → /app/admin (removes old standalone login gate) */}
+        <Route path="/admin" element={<Navigate to="/app/admin" replace />} />
         
         {/* Catch all */}
         <Route path="*" element={<Navigate to="/" replace />} />

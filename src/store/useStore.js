@@ -327,8 +327,8 @@ export const useStore = create(
       
       loadRole: async () => {
         try {
-          const role = await api.getUserRole()
-          set({ userRole: role })
+          const { role, plan } = await api.getUserRole()
+          set({ userRole: role, userPlan: plan || 'free' })
           return role
         } catch (e) {
           return null
