@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useStore } from '../store/useStore'
 import { formatDate } from '../utils/dateFormat'
-import { canAccessAdmin } from '../utils/rbac'
 
 // Tabs — super_admin sees everything; admin sees business ops (no platform config / feature flags / roles)
 const SUPER_TABS = [

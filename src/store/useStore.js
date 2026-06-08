@@ -317,7 +317,7 @@ export const useStore = create(
       },
       
       logout: () => {
-        localStorage.removeItem('zustand-store')
+        localStorage.removeItem('invoice-chaser-storage')
         set({ user: null, session: null, userRole: null, invoices: [], customers: [], reminders: [] })
       },
       
