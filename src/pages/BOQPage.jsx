@@ -494,7 +494,8 @@ export default function BOQPage() {
 
       {/* BOQ Table */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden mb-4">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[700px] border-collapse">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50">
               <th className="px-4 py-2 text-left text-[10px] font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider border-b border-neutral-200 dark:border-neutral-800">Item</th>
@@ -574,6 +575,7 @@ export default function BOQPage() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Cost Summary */}

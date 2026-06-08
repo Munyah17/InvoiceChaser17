@@ -112,7 +112,7 @@ export default function SettingsPage() {
           {/* Profile Settings */}
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
             <div className="font-semibold text-sm mb-3 text-neutral-900 dark:text-white">Profile</div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Full Name</label>
                 <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} />

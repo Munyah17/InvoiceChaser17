@@ -234,7 +234,7 @@ export default function InvoiceMakerPage() {
               <div className="space-y-2">
                 <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={company.name} onChange={e => setCompany({...company, name: e.target.value})} placeholder="Company Name" />
                 <textarea className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none h-16 resize-y" value={company.address} onChange={e => setCompany({...company, address: e.target.value})} placeholder="Address" />
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={company.email} onChange={e => setCompany({...company, email: e.target.value})} placeholder="Email" />
                   <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={company.phone} onChange={e => setCompany({...company, phone: e.target.value})} placeholder="Phone" />
                 </div>
@@ -259,7 +259,7 @@ export default function InvoiceMakerPage() {
                 <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Invoice #</label>
                 <input className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={meta.invoiceNumber} onChange={e => setMeta({...meta, invoiceNumber: e.target.value})} />
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                   <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Date</label>
                   <input type="date" className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={meta.date} onChange={e => setMeta({...meta, date: e.target.value})} />
@@ -279,7 +279,7 @@ export default function InvoiceMakerPage() {
               <h2 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Bill To</h2>
               <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={client.name} onChange={e => setClient({...client, name: e.target.value})} placeholder="Client Name" />
               <textarea className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none h-14 resize-y" value={client.address} onChange={e => setClient({...client, address: e.target.value})} placeholder="Client Address" />
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={client.email} onChange={e => setClient({...client, email: e.target.value})} placeholder="Email" />
                 <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={client.phone} onChange={e => setClient({...client, phone: e.target.value})} placeholder="Phone" />
               </div>
@@ -289,7 +289,8 @@ export default function InvoiceMakerPage() {
           {/* Line Items */}
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
             <h2 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">Line Items</h2>
-            <div className="space-y-2">
+            <div className="overflow-x-auto">
+            <div className="min-w-[480px] space-y-2">
               {items.map((item, idx) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
                   <div className="col-span-5">
@@ -311,6 +312,7 @@ export default function InvoiceMakerPage() {
                   </div>
                 </div>
               ))}
+            </div>
             </div>
             <button onClick={addItem} className="mt-3 flex items-center gap-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white transition-colors">
               <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>

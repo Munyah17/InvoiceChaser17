@@ -119,7 +119,7 @@ export default function QuotationPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div>
             <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Quote #</label>
             <input className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={quoteNum} onChange={e => setQuoteNum(e.target.value)} />
@@ -134,7 +134,7 @@ export default function QuotationPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Client Email</label>
             <input type="email" className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={client.email} onChange={e => setClient({...client, email: e.target.value})} />
@@ -156,7 +156,8 @@ export default function QuotationPage() {
             <span className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Line Items</span>
             <button onClick={addItem} className="text-xs text-neutral-900 dark:text-white font-medium hover:underline">+ Add Item</button>
           </div>
-          <div className="space-y-2">
+          <div className="overflow-x-auto">
+          <div className="min-w-[460px] space-y-2">
             {items.map((item, i) => (
               <div key={i} className="flex gap-2 items-center">
                 <input className="flex-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" placeholder="Description" value={item.description} onChange={e => updateItem(i, 'description', e.target.value)} />
@@ -166,6 +167,7 @@ export default function QuotationPage() {
                 <button onClick={() => removeItem(i)} className="text-neutral-400 hover:text-red-500"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-current fill-none stroke-2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/></svg></button>
               </div>
             ))}
+          </div>
           </div>
         </div>
 
