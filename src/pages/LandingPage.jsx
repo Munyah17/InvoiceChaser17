@@ -272,6 +272,68 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
+        <div className="text-center mb-10 sm:mb-16">
+          <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-neutral-950 dark:text-white mb-4 tracking-tight">
+            Simple, transparent pricing
+          </h2>
+          <p className="text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto px-2">
+            Choose the plan that fits your business. No hidden fees, cancel anytime.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-4 sm:gap-6 lg:gap-10 max-w-6xl mx-auto">
+          <div className="bg-neutral-900 p-6 sm:p-8 rounded-2xl border border-neutral-800">
+            <h3 className="font-display font-semibold text-lg text-white mb-2">Starter</h3>
+            <div className="font-display font-bold text-3xl sm:text-4xl text-white mb-2">$4.99<span className="text-lg text-neutral-300 font-normal">/mo</span></div>
+            <p className="text-sm text-neutral-300 mb-6">For freelancers</p>
+            <ul className="text-sm text-white space-y-3 mb-8">
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>100 invoices/month</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Email reminders</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>PDF export</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Basic analytics</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Customer management</li>
+            </ul>
+            <Link to="/register?plan=starter" className="block">
+              <Button variant="default" className="w-full font-medium bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Get Started</Button>
+            </Link>
+          </div>
+          <div className="bg-neutral-100 dark:bg-neutral-900/50 p-6 sm:p-8 rounded-2xl border-2 border-neutral-200 dark:border-white relative">
+            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-neutral-950 dark:bg-white dark:text-neutral-950 font-semibold text-xs px-4 py-1.5 rounded-full whitespace-nowrap">Most Popular</div>
+            <h3 className="font-display font-semibold text-lg text-neutral-950 dark:text-white mb-2">Professional</h3>
+            <div className="font-display font-bold text-3xl sm:text-4xl text-neutral-950 dark:text-white mb-2">$11.99<span className="text-lg text-neutral-500 dark:text-neutral-300 font-normal">/mo</span></div>
+            <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">For growing businesses</p>
+            <ul className="text-sm text-neutral-700 dark:text-neutral-200 space-y-3 mb-8">
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Unlimited invoices</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Full automation</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>BOQ/BOM Engine</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>API access</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
+            </ul>
+            <Link to="/register?plan=professional" className="block">
+              <Button variant="default" className="w-full bg-white text-neutral-950 hover:bg-neutral-200 border-white font-semibold text-center justify-center">Get Started</Button>
+            </Link>
+          </div>
+          <div className="bg-neutral-900 p-6 sm:p-8 rounded-2xl border border-neutral-800">
+            <h3 className="font-display font-semibold text-lg text-white mb-2">Business</h3>
+            <div className="font-display font-bold text-3xl sm:text-4xl text-white mb-2">$29.99<span className="text-lg text-neutral-300 font-normal">/mo</span></div>
+            <p className="text-sm text-neutral-300 mb-6">For teams & agencies</p>
+            <ul className="text-sm text-white space-y-3 mb-8">
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Multi-user access (5 users)</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>White-label invoices</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Team collaboration</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Custom branding</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>SLA guarantee</li>
+            </ul>
+            <Link to="/register?plan=business" className="block">
+              <Button variant="default" className="w-full font-medium bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section id="testimonials" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
         <div className="text-center mb-10 sm:mb-16">
@@ -333,68 +395,6 @@ export default function LandingPage() {
                 <div className="text-sm text-neutral-300">Founder, Creative Studio</div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing */}
-      <section id="pricing" className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20">
-        <div className="text-center mb-10 sm:mb-16">
-          <h2 className="font-display font-bold text-2xl sm:text-3xl lg:text-4xl text-neutral-950 dark:text-white mb-4 tracking-tight">
-            Simple, transparent pricing
-          </h2>
-          <p className="text-neutral-500 dark:text-neutral-400 max-w-2xl mx-auto px-2">
-            Choose the plan that fits your business. No hidden fees, cancel anytime.
-          </p>
-        </div>
-        <div className="grid md:grid-cols-3 gap-4 sm:gap-6 lg:gap-10 max-w-6xl mx-auto">
-          <div className="bg-neutral-900 p-6 sm:p-8 rounded-2xl border border-neutral-800">
-            <h3 className="font-display font-semibold text-lg text-white mb-2">Starter</h3>
-            <div className="font-display font-bold text-3xl sm:text-4xl text-white mb-2">$4.99<span className="text-lg text-neutral-300 font-normal">/mo</span></div>
-            <p className="text-sm text-neutral-300 mb-6">For freelancers</p>
-            <ul className="text-sm text-white space-y-3 mb-8">
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>100 invoices/month</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Email reminders</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>PDF export</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Basic analytics</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Customer management</li>
-            </ul>
-            <Link to="/register?plan=starter" className="block">
-              <Button variant="default" className="w-full font-medium bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Get Started</Button>
-            </Link>
-          </div>
-          <div className="bg-neutral-100 dark:bg-neutral-900/50 p-6 sm:p-8 rounded-2xl border-2 border-neutral-200 dark:border-white relative">
-            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-white text-neutral-950 dark:bg-white dark:text-neutral-950 font-semibold text-xs px-4 py-1.5 rounded-full whitespace-nowrap">Most Popular</div>
-            <h3 className="font-display font-semibold text-lg text-neutral-950 dark:text-white mb-2">Professional</h3>
-            <div className="font-display font-bold text-3xl sm:text-4xl text-neutral-950 dark:text-white mb-2">$11.99<span className="text-lg text-neutral-500 dark:text-neutral-300 font-normal">/mo</span></div>
-            <p className="text-sm text-neutral-600 dark:text-neutral-300 mb-6">For growing businesses</p>
-            <ul className="text-sm text-neutral-700 dark:text-neutral-200 space-y-3 mb-8">
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Unlimited invoices</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Full automation</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>BOQ/BOM Engine</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>API access</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Advanced analytics</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
-            </ul>
-            <Link to="/register?plan=professional" className="block">
-              <Button variant="default" className="w-full bg-white text-neutral-950 hover:bg-neutral-200 border-white font-semibold text-center justify-center">Get Started</Button>
-            </Link>
-          </div>
-          <div className="bg-neutral-900 p-6 sm:p-8 rounded-2xl border border-neutral-800">
-            <h3 className="font-display font-semibold text-lg text-white mb-2">Business</h3>
-            <div className="font-display font-bold text-3xl sm:text-4xl text-white mb-2">$29.99<span className="text-lg text-neutral-300 font-normal">/mo</span></div>
-            <p className="text-sm text-neutral-300 mb-6">For teams & agencies</p>
-            <ul className="text-sm text-white space-y-3 mb-8">
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Multi-user access (5 users)</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>White-label invoices</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Team collaboration</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Custom branding</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>Priority support</li>
-              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2"><polyline points="20 6 9 17 4 12"/></svg>SLA guarantee</li>
-            </ul>
-            <Link to="/register?plan=business" className="block">
-              <Button variant="default" className="w-full font-medium bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Get Started</Button>
-            </Link>
           </div>
         </div>
       </section>
