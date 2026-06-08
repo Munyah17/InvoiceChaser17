@@ -8,9 +8,9 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 
 serve(async (req) => {
   try {
-    const { invoice_id, amount, method, source } = await req.json()
+    const { invoice_id, method, source } = await req.json()
 
-    if (!invoice_id || !amount || !method) {
+    if (!invoice_id || !method) {
       return new Response(
         JSON.stringify({ error: 'Missing required fields' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
@@ -18,11 +18,11 @@ serve(async (req) => {
     }
 
     const supabase = createClient(
-      Deno.env.get('VITE_SUPABASE_URL') || '',
-      Deno.env.get('VITE_SUPABASE_SERVICE_ROLE_KEY') || ''
+      Deno.env.get('SUPABASE_URL') || '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
     )
 
-    // Get invoice details
+    // Get invoice details — amount is taken from the DB record, never from the request body
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
       .select('*, customers(*)')
@@ -36,13 +36,15 @@ serve(async (req) => {
       )
     }
 
+    const authorizedAmount = parseFloat(invoice.amount)
+
     // Calculate fee - 5% if source is chaser_link
     let feeTaken = 0
     if (source === 'chaser_link') {
-      feeTaken = amount * 0.05
+      feeTaken = authorizedAmount * 0.05
     }
 
-    const netAmount = amount - feeTaken
+    const netAmount = authorizedAmount - feeTaken
 
     // Create payment record
     const { data: payment, error: paymentError } = await supabase
@@ -55,9 +57,9 @@ serve(async (req) => {
         method,
         status: 'completed',
         source: source || 'normal',
-        fee_taken,
+        fee_taken: feeTaken,
         metadata: {
-          original_amount: amount,
+          original_amount: authorizedAmount,
         },
       })
       .select()

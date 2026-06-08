@@ -10,52 +10,49 @@ export default function PaymentSuccessPage() {
   const { setUserPlan } = useStore()
   const [loading, setLoading] = useState(true)
   const [sessionData, setSessionData] = useState(null)
-  const isDemo = searchParams.get('demo') === 'true'
-  const demoPlan = searchParams.get('plan') || 'professional'
 
   const method = searchParams.get('method')
 
   useEffect(() => {
     const processPayment = async () => {
-      if (isDemo) {
-        setSessionData({ plan: demoPlan, status: 'active' })
-        setUserPlan(demoPlan)
-        setLoading(false)
-        return
-      }
-
       // Paynow / EcoCash path — verify by polling the gateway
       if (method === 'paynow' || method === 'ecocash') {
-        const planId = searchParams.get('plan') || 'professional'
         const pollUrl = sessionStorage.getItem('paynow_poll_url')
+        const planId = sessionStorage.getItem('paynow_plan_id')
 
-        if (pollUrl) {
-          // Poll up to 6 times (12 s total) waiting for the gateway to confirm
-          let paid = false
-          for (let i = 0; i < 6; i++) {
-            try {
-              const pollRes = await fetch('/api/paynow-poll', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ pollUrl }),
-              })
-              const pollData = await pollRes.json()
-              if (pollData.paid) { paid = true; break }
-              if (['cancelled', 'failed', 'error'].includes((pollData.status || '').toLowerCase())) break
-            } catch (_) { /* network hiccup — keep polling */ }
-            await new Promise(r => setTimeout(r, 2000))
-          }
-
-          if (!paid) {
-            // Gateway hasn't confirmed yet — navigate to failure so user can retry
-            sessionStorage.removeItem('paynow_poll_url')
-            sessionStorage.removeItem('paynow_reference')
-            sessionStorage.removeItem('paynow_plan_id')
-            navigate(`/payment-failure?plan=${planId}`)
-            return
-          }
+        if (!pollUrl || !planId) {
+          // No server-verified poll URL — cannot confirm payment
+          sessionStorage.removeItem('paynow_poll_url')
+          sessionStorage.removeItem('paynow_reference')
+          sessionStorage.removeItem('paynow_plan_id')
+          navigate('/payment-failure')
+          return
         }
-        // Confirmed paid (or no pollUrl — trust the returnUrl for mobile)
+
+        // Poll up to 6 times (12 s total) waiting for the gateway to confirm
+        let paid = false
+        for (let i = 0; i < 6; i++) {
+          try {
+            const pollRes = await fetch('/api/paynow-poll', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pollUrl }),
+            })
+            const pollData = await pollRes.json()
+            if (pollData.paid) { paid = true; break }
+            if (['cancelled', 'failed', 'error'].includes((pollData.status || '').toLowerCase())) break
+          } catch (_) { /* network hiccup — keep polling */ }
+          await new Promise(r => setTimeout(r, 2000))
+        }
+
+        if (!paid) {
+          sessionStorage.removeItem('paynow_poll_url')
+          sessionStorage.removeItem('paynow_reference')
+          sessionStorage.removeItem('paynow_plan_id')
+          navigate(`/payment-failure?plan=${planId}`)
+          return
+        }
+
         sessionStorage.removeItem('paynow_poll_url')
         sessionStorage.removeItem('paynow_reference')
         sessionStorage.removeItem('paynow_plan_id')
@@ -119,7 +116,7 @@ export default function PaymentSuccessPage() {
     }
 
     processPayment()
-  }, [searchParams, navigate, setUserPlan, isDemo, demoPlan, method])
+  }, [searchParams, navigate, setUserPlan, method])
 
   if (loading) {
     return (
@@ -136,11 +133,6 @@ export default function PaymentSuccessPage() {
     <div className="min-h-screen bg-white dark:bg-neutral-950 flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
         <div className="bg-neutral-100 dark:bg-neutral-900 rounded-2xl p-8 border border-neutral-200 dark:border-neutral-800 text-center">
-          {isDemo && (
-            <div className="mb-4 px-4 py-2 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium">
-              DEMO MODE - No actual payment processed
-            </div>
-          )}
           <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg viewBox="0 0 24 24" className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="20 6 9 17 4 12" />
@@ -148,13 +140,11 @@ export default function PaymentSuccessPage() {
           </div>
 
           <h1 className="font-display font-bold text-3xl text-neutral-950 dark:text-white tracking-tight mb-4">
-            {isDemo ? 'Demo Payment Successful!' : 'Payment Successful!'}
+            Payment Successful!
           </h1>
 
           <p className="text-neutral-500 dark:text-neutral-400 mb-8">
-            {isDemo
-              ? 'This was a test. To enable real payments, deploy the Edge Function (see STRIPE_SETUP.md).'
-              : 'Your subscription has been activated. You now have full access to all features.'}
+            Your subscription has been activated. You now have full access to all features.
           </p>
 
           {sessionData && (

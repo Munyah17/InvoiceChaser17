@@ -38,15 +38,14 @@ serve(async (req: Request) => {
     const signature = req.headers.get('stripe-signature')
     const body = await req.text()
 
-    let event
-
-    if (webhookSecret && signature) {
-      // Verify webhook signature
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
-    } else {
-      // For testing without webhook secret
-      event = JSON.parse(body)
+    if (!webhookSecret || !signature) {
+      return new Response(
+        JSON.stringify({ error: 'Missing webhook secret or signature' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
+
+    const event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
 
     // Handle checkout completion
     if (event.type === 'checkout.session.completed') {

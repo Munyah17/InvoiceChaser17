@@ -60,7 +60,7 @@ export default function InvoicesPage() {
     
     if (error) {
       console.error('Invoice creation error:', error)
-      setToast({ message: error.message || 'Failed to create invoice', type: 'error' })
+      setToast({ message: 'Failed to create invoice. Please try again.', type: 'error' })
       return
     }
 
@@ -138,9 +138,10 @@ export default function InvoicesPage() {
           .from('invoices')
           .update({
             payment_link: paymentLink,
-            payment_link_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
+            payment_link_expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
           })
           .eq('id', invoice.id)
+          .eq('user_id', user.id)
       }
       
       const emailTemplate = generateReminderEmail(invoice, customer, company, paymentLink)
@@ -185,11 +186,21 @@ export default function InvoicesPage() {
     }
   }
 
-  const bulkDelete = () => {
+  const bulkDelete = async () => {
     if (confirm(`Delete ${selected.size} invoice(s)?`)) {
-      setInvoices(invoices.filter(inv => !selected.has(inv.id)))
+      const { deleteInvoice: delInv } = useStore.getState()
+      const ids = [...selected]
+      let failed = 0
+      for (const id of ids) {
+        const { error } = await delInv(id)
+        if (error) failed++
+      }
       setSelected(new Set())
-      setToast({ message: 'Invoices deleted', type: 'success' })
+      if (failed === 0) {
+        setToast({ message: `${ids.length} invoice(s) deleted`, type: 'success' })
+      } else {
+        setToast({ message: `${ids.length - failed} deleted, ${failed} failed`, type: 'error' })
+      }
     }
   }
 

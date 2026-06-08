@@ -13,7 +13,8 @@ export default function LoginPage() {
   const [searchParams] = useSearchParams()
   const { setUser, setSession, loadRole } = useStore()
 
-  const redirectUrl = searchParams.get('redirect') || null
+  const rawRedirect = searchParams.get('redirect')
+  const redirectUrl = rawRedirect?.startsWith('/') ? rawRedirect : null
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -29,7 +30,7 @@ export default function LoginPage() {
     const { data, error: signInError } = await signIn(email, password)
 
     if (signInError) {
-      setError(signInError.message)
+      setError('Invalid email or password.')
       setLoading(false)
       return
     }

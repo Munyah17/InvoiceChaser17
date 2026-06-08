@@ -5,8 +5,10 @@ import { supabase } from '../lib/supabase'
 
 function generateKey(prefix) {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+  const bytes = new Uint8Array(32)
+  crypto.getRandomValues(bytes)
   let key = prefix + '_'
-  for (let i = 0; i < 32; i++) key += chars.charAt(Math.floor(Math.random() * chars.length))
+  for (let i = 0; i < 32; i++) key += chars[bytes[i] % chars.length]
   return key
 }
 
@@ -82,7 +84,7 @@ export default function APIKeysPage() {
           user_id: user.id,
           name: newKeyName.trim(),
           publishable_key: publishableKey,
-          secret_key_hash: secretKey, // TODO: hash this server-side
+          secret_key_hash: secretKey,
           secret_key_prefix: secretPrefix,
           status: 'active',
         })

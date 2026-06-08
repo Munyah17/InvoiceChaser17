@@ -59,7 +59,7 @@ export default function Dashboard() {
     
     if (error) {
       console.error('Invoice creation error:', error)
-      setToast({ message: error.message || 'Failed to create invoice', type: 'error' })
+      setToast({ message: 'Failed to create invoice. Please try again.', type: 'error' })
       return
     }
 

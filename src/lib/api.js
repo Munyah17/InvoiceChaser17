@@ -193,14 +193,13 @@ export const getPayments = async (userId) => {
     .from('payments')
     .select(`
       *,
-      invoices (
+      invoices!inner (
         invoice_number,
-        amount
+        amount,
+        user_id
       )
     `)
-    .in('invoice_id',
-      supabase.from('invoices').select('id').eq('user_id', userId)
-    )
+    .eq('invoices.user_id', userId)
     .order('created_at', { ascending: false })
   return { data, error }
 }
@@ -328,11 +327,9 @@ export const subscribeToReminders = (userId, callback) => {
         event: '*',
         schema: 'public',
         table: 'reminders',
+        filter: `user_id=eq.${userId}`,
       },
-      (payload) => {
-        // Filter by user_id through invoice relationship
-        callback(payload)
-      }
+      callback
     )
     .subscribe()
 }

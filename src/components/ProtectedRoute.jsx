@@ -5,17 +5,16 @@ import { supabase } from '../lib/supabase'
 import { resolveRole, canAccessAdmin, isSuperAdmin } from '../utils/rbac'
 
 export function ProtectedRoute({ children }) {
-  const { setUser, setSession } = useStore()
+  const { setUser } = useStore()
   const navigate = useNavigate()
   const [isAuth, setIsAuth] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        setUser(session.user)
-        setSession(session)
+      const { data: { user }, error } = await supabase.auth.getUser()
+      if (user && !error) {
+        setUser(user)
         setIsAuth(true)
       } else {
         navigate('/login')
@@ -24,7 +23,7 @@ export function ProtectedRoute({ children }) {
     }
 
     checkAuth()
-  }, [navigate, setUser, setSession])
+  }, [navigate, setUser])
 
   if (loading) {
     return (
@@ -45,40 +44,37 @@ export function ProtectedRoute({ children }) {
 }
 
 export function AdminRoute({ children }) {
-  const { user, userRole } = useStore()
+  const { setUserRole } = useStore()
   const navigate = useNavigate()
   const [isAdmin, setIsAdmin] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      if (!user) {
+      // Always verify identity and role from server — never trust cached localStorage values
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (!user || authError) {
         navigate('/login')
         return
       }
 
-      // Prefer already-loaded role from store
-      let role = userRole
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
 
-      // Fallback: fetch from profiles then users (legacy)
+      let role = profileData?.role
       if (!role) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
+        const { data: userData } = await supabase
+          .from('users')
+          .select('is_admin')
           .eq('id', user.id)
           .single()
-
-        if (profileData?.role) {
-          role = profileData.role
-        } else {
-          const { data: userData } = await supabase
-            .from('users')
-            .select('is_admin')
-            .eq('id', user.id)
-            .single()
-          role = resolveRole(null, userData?.is_admin)
-        }
+        role = resolveRole(null, userData?.is_admin)
       }
+
+      setUserRole(role)
 
       if (!canAccessAdmin(role)) {
         navigate('/app/dashboard')
@@ -89,7 +85,7 @@ export function AdminRoute({ children }) {
     }
 
     checkAdminStatus()
-  }, [user, userRole, navigate])
+  }, [navigate, setUserRole])
 
   if (loading) {
     return (
@@ -110,27 +106,28 @@ export function AdminRoute({ children }) {
 }
 
 export function SuperAdminRoute({ children }) {
-  const { user, userRole } = useStore()
+  const { setUserRole } = useStore()
   const navigate = useNavigate()
   const [isSuper, setIsSuper] = useState(false)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const checkSuperAdmin = async () => {
-      if (!user) {
+      // Always verify identity and role from server — never trust cached localStorage values
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      if (!user || authError) {
         navigate('/login')
         return
       }
 
-      let role = userRole
-      if (!role) {
-        const { data: profileData } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        role = profileData?.role
-      }
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single()
+
+      const role = profileData?.role
+      setUserRole(role)
 
       if (!isSuperAdmin(role)) {
         navigate('/app/dashboard')
@@ -141,7 +138,7 @@ export function SuperAdminRoute({ children }) {
     }
 
     checkSuperAdmin()
-  }, [user, userRole, navigate])
+  }, [navigate, setUserRole])
 
   if (loading) {
     return (

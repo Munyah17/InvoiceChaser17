@@ -340,7 +340,6 @@ export const useStore = create(
       partialize: (state) => ({
         settings: state.settings,
         templates: state.templates,
-        userRole: state.userRole,
       }),
     }
   )

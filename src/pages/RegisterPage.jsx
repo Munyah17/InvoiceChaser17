@@ -74,7 +74,8 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams()
   const { setUser, setSession } = useStore()
 
-  const redirectUrl = searchParams.get('redirect') || '/app/dashboard'
+  const rawRedirect = searchParams.get('redirect')
+  const redirectUrl = rawRedirect?.startsWith('/') ? rawRedirect : '/app/dashboard'
   const preselectedPlan = searchParams.get('plan')
 
   // Pre-select plan from URL
@@ -179,7 +180,7 @@ export default function RegisterPage() {
       navigate(`/checkout?plan=${selectedPlan}`)
     } catch (error) {
       console.error('Registration error:', error)
-      setError(`Failed to create account: ${error.message}`)
+      setError('Failed to create account. Please try again or contact support.')
       setLoading(false)
     }
   }
