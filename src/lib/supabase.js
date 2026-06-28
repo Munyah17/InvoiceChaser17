@@ -1,18 +1,29 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseUrl     = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Guard: surface a clear console error rather than crashing the whole app.
+// The real fix is setting VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY in
+// your deployment platform (Netlify / Vercel) environment variable settings.
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error(
+    '[InvoiceChaser] Missing Supabase environment variables.\n' +
+    'Set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in your deployment platform.'
+  )
+}
+
+export const supabase = createClient(
+  supabaseUrl  || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-anon-key'
+)
 
 // Auth helper functions
 export const signUp = async (email, password, metadata) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: metadata,
-    },
+    options: { data: metadata },
   })
   return { data, error }
 }
