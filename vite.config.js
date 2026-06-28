@@ -5,12 +5,18 @@ export default defineConfig({
   plugins: [react()],
 
   build: {
-    // Ensures browsers always fetch the latest JS/CSS after a deploy
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         entryFileNames:  'assets/[name]-[hash].js',
         chunkFileNames:  'assets/[name]-[hash].js',
         assetFileNames:  'assets/[name]-[hash][extname]',
+        manualChunks: {
+          'vendor-react':    ['react', 'react-dom', 'react-router-dom'],
+          'vendor-supabase': ['@supabase/supabase-js'],
+          'vendor-stripe':   ['@stripe/stripe-js'],
+          'vendor-pdf':      ['html2canvas', 'jspdf'],
+        },
       },
     },
   },

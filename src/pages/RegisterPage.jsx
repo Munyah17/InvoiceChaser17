@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { signUp, signIn } from '../lib/supabase'
+import { signUp, signIn, supabase } from '../lib/supabase'
 import { useStore } from '../store/useStore'
 import Button from '../components/Button'
 import { formatDateTime } from '../utils/dateFormat'
@@ -139,7 +139,6 @@ export default function RegisterPage() {
       if (selectedPlan === 'enterprise') {
         // Save enterprise request to DB (fire and forget)
         try {
-          const { supabase } = await import('../lib/supabase')
           await supabase.from('enterprise_requests').insert({
             user_id: signInData.user.id,
             name: fullName,

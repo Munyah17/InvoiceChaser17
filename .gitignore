@@ -38,3 +38,6 @@ scripts/
 .agents/
 .claude/
 skills-lock.json
+
+.vercel
+.netlify
