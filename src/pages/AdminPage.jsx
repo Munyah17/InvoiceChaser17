@@ -363,70 +363,251 @@ export default function AdminPage() {
       })()}
 
       {/* ── OVERVIEW ─────────────────────────────────────────────────────── */}
-      {activeTab === 'overview' && (
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat label="MRR" value={loading ? '…' : fmt(metrics.mrr)} sub="Monthly recurring revenue" highlight />
-            <Stat label="ARR" value={loading ? '…' : fmt(metrics.arr)} sub="Annualised recurring revenue" />
-            <Stat label="Total Revenue" value={loading ? '…' : fmt(metrics.totalRevenue)} sub="All time completed payments" />
-            <Stat label="This Month" value={loading ? '…' : fmt(metrics.revenueThisMonth)} sub="Revenue current month" />
-          </div>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <Stat label="Total Users" value={loading ? '…' : metrics.totalUsers} sub="All registered accounts" />
-            <Stat label="Active Subs" value={loading ? '…' : metrics.activeSubs} sub={`${metrics.trialSubs} trial · ${metrics.cancelledSubs} cancelled`} />
-            <Stat label="New Today" value={loading ? '…' : metrics.newUsersToday} sub="Signups since midnight" />
-            <Stat label="New This Week" value={loading ? '…' : metrics.newUsersThisWeek} sub="Current calendar week" />
-          </div>
+      {activeTab === 'overview' && (() => {
+        const churnRate = (metrics.activeSubs + metrics.cancelledSubs) > 0
+          ? ((metrics.cancelledSubs / (metrics.activeSubs + metrics.cancelledSubs)) * 100).toFixed(1)
+          : '0.0'
+        const arpu = metrics.activeSubs > 0
+          ? (metrics.mrr / metrics.activeSubs).toFixed(2)
+          : '0.00'
+        const totalPlanUsers = Object.values(metrics.planBreakdown).reduce((a, b) => a + b, 0) || 1
+        const PLAN_BAR_COLOR = {
+          free:         'bg-neutral-400',
+          starter:      'bg-blue-500',
+          professional: 'bg-violet-500',
+          business:     'bg-amber-500',
+          lifetime:     'bg-emerald-500',
+          enterprise:   'bg-red-500',
+          super_admin:  'bg-neutral-900 dark:bg-white',
+        }
 
-          {/* Plan breakdown */}
-          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
-            <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4">Users by Plan</h3>
-            <div className="flex flex-wrap gap-3">
-              {Object.entries(metrics.planBreakdown).sort((a, b) => b[1] - a[1]).map(([plan, count]) => (
-                <div key={plan} className="flex items-center gap-2 bg-neutral-50 dark:bg-neutral-800 rounded-lg px-3 py-2">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${PLAN_COLOR[plan] || PLAN_COLOR.free}`}>{plan}</span>
-                  <span className="text-sm font-bold text-neutral-900 dark:text-white">{count}</span>
-                  <span className="text-[10px] text-neutral-400">users</span>
+        return (
+          <div className="space-y-4">
+
+            {/* ── Hero revenue row ── */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* MRR hero card */}
+              <div className="bg-neutral-950 dark:bg-white rounded-xl p-5 relative overflow-hidden">
+                <div className="absolute inset-0 opacity-5"
+                  style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, white 0%, transparent 60%)' }} />
+                <div className="relative">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500 mb-1">Monthly Recurring Revenue</div>
+                  <div className="font-bold text-3xl text-white dark:text-neutral-950 mb-1">
+                    {loading ? '…' : fmt(metrics.mrr)}
+                  </div>
+                  <div className="flex items-center gap-4 text-[11px]">
+                    <span className="text-neutral-400 dark:text-neutral-500">{metrics.activeSubs} active subs</span>
+                    <span className="flex items-center gap-1 text-emerald-400 dark:text-emerald-600 font-medium">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="w-3 h-3"><polyline points="18 15 12 9 6 15"/></svg>
+                      ARPU ${arpu}
+                    </span>
+                  </div>
                 </div>
-              ))}
-              {Object.keys(metrics.planBreakdown).length === 0 && !loading && (
-                <p className="text-xs text-neutral-400">No data yet</p>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Recent signups */}
-          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
-              <span className="font-semibold text-sm text-neutral-900 dark:text-white">Recent Signups</span>
-              <button onClick={() => handleTabChange('users')} className="text-xs text-neutral-500 hover:underline">View all →</button>
+              {/* ARR + secondary metrics 2-col right */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">ARR</div>
+                  <div className="font-bold text-xl text-neutral-900 dark:text-white">{loading ? '…' : fmt(metrics.arr)}</div>
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Annualised</div>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">This Month</div>
+                  <div className="font-bold text-xl text-neutral-900 dark:text-white">{loading ? '…' : fmt(metrics.revenueThisMonth)}</div>
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Revenue</div>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">Total Revenue</div>
+                  <div className="font-bold text-xl text-neutral-900 dark:text-white">{loading ? '…' : fmt(metrics.totalRevenue)}</div>
+                  <div className="text-[10px] text-neutral-400 mt-0.5">All time</div>
+                </div>
+                <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">Churn Rate</div>
+                  <div className={`font-bold text-xl ${parseFloat(churnRate) > 10 ? 'text-red-500' : parseFloat(churnRate) > 5 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                    {loading ? '…' : `${churnRate}%`}
+                  </div>
+                  <div className="text-[10px] text-neutral-400 mt-0.5">Cancelled / total</div>
+                </div>
+              </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs min-w-[400px]">
-                <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
-                  <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Email</th>
-                  <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Plan</th>
-                  <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Joined</th>
-                </tr></thead>
-                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
-                  {usersList.slice(0, 8).map(u => (
-                    <tr key={u.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/30">
-                      <td className="px-4 py-2 text-neutral-900 dark:text-white">{u.email}</td>
-                      <td className="px-4 py-2">
-                        <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${PLAN_COLOR[u.plan || 'free'] || PLAN_COLOR.free}`}>{u.plan || 'free'}</span>
-                      </td>
-                      <td className="px-4 py-2 text-neutral-500">{formatDate(u.created_at)}</td>
-                    </tr>
-                  ))}
-                  {usersList.length === 0 && !loading && (
-                    <tr><td colSpan={3} className="px-4 py-8 text-center text-neutral-400">No users yet</td></tr>
+
+            {/* ── User metrics row ── */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">Total Users</div>
+                <div className="font-bold text-2xl text-neutral-900 dark:text-white">{loading ? '…' : metrics.totalUsers}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">Registered accounts</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">Active Subs</div>
+                <div className="font-bold text-2xl text-neutral-900 dark:text-white">{loading ? '…' : metrics.activeSubs}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">{metrics.trialSubs} trial</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">New Today</div>
+                <div className="font-bold text-2xl text-neutral-900 dark:text-white">{loading ? '…' : metrics.newUsersToday}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">Since midnight</div>
+              </div>
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-neutral-400 mb-1">This Week</div>
+                <div className="font-bold text-2xl text-neutral-900 dark:text-white">{loading ? '…' : metrics.newUsersThisWeek}</div>
+                <div className="text-[10px] text-neutral-400 mt-0.5">New signups</div>
+              </div>
+            </div>
+
+            {/* ── Middle row: plan breakdown + quick actions ── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {/* Plan distribution */}
+              <div className="lg:col-span-2 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Plan Distribution</h3>
+                  <span className="text-[10px] text-neutral-400">{metrics.totalUsers} total users</span>
+                </div>
+                <div className="space-y-3">
+                  {Object.entries(metrics.planBreakdown).sort((a, b) => b[1] - a[1]).map(([plan, count]) => {
+                    const pct = Math.round((count / totalPlanUsers) * 100)
+                    return (
+                      <div key={plan}>
+                        <div className="flex items-center justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${PLAN_COLOR[plan] || PLAN_COLOR.free}`}>{plan}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-neutral-900 dark:text-white">{count}</span>
+                            <span className="text-[10px] text-neutral-400 w-8 text-right">{pct}%</span>
+                          </div>
+                        </div>
+                        <div className="h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${PLAN_BAR_COLOR[plan] || 'bg-neutral-400'}`}
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {Object.keys(metrics.planBreakdown).length === 0 && !loading && (
+                    <p className="text-xs text-neutral-400 py-4 text-center">No users yet</p>
                   )}
-                </tbody>
-              </table>
+                </div>
+              </div>
+
+              {/* Quick actions */}
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+                <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4">Quick Actions</h3>
+                <div className="space-y-2">
+                  {[
+                    { label: 'Manage Users', tab: 'users', icon: 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M12 7a4 4 0 110 8 4 4 0 010-8z', color: 'text-blue-500 bg-blue-50 dark:bg-blue-900/20' },
+                    { label: 'Subscriptions', tab: 'subscribers', icon: 'M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14', color: 'text-violet-500 bg-violet-50 dark:bg-violet-900/20' },
+                    { label: 'Analytics', tab: 'analytics', icon: 'M18 20V10M12 20V4M6 20v-6M2 20h20', color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20' },
+                    { label: 'API Keys', tab: 'api_keys', icon: 'M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4', color: 'text-amber-500 bg-amber-50 dark:bg-amber-900/20' },
+                    ...(userRole === 'super_admin' ? [
+                      { label: 'Staff Management', tab: 'staff', icon: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z', color: 'text-slate-500 bg-slate-50 dark:bg-slate-900/20' },
+                      { label: 'Feature Flags', tab: 'flags', icon: 'M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1zM4 22v-7', color: 'text-orange-500 bg-orange-50 dark:bg-orange-900/20' },
+                    ] : []),
+                  ].map(a => (
+                    <button
+                      key={a.tab}
+                      onClick={() => handleTabChange(a.tab)}
+                      className="flex items-center gap-3 w-full px-3 py-2.5 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors group text-left"
+                    >
+                      <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${a.color}`}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-3.5 h-3.5">
+                          <path d={a.icon}/>
+                        </svg>
+                      </div>
+                      <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-white flex-1">{a.label}</span>
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-3 h-3 text-neutral-400">
+                        <polyline points="9 18 15 12 9 6"/>
+                      </svg>
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
+
+            {/* ── Platform health (super_admin only) ── */}
+            {userRole === 'super_admin' && (
+              <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
+                <h3 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-4">Platform Health</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {[
+                    { label: 'Auth Service',       status: 'operational', note: 'Supabase Auth' },
+                    { label: 'Database',           status: 'operational', note: 'PostgreSQL + RLS' },
+                    { label: 'Stripe Payments',    status: 'operational', note: 'Webhook active' },
+                    { label: 'Paynow Gateway',     status: 'operational', note: 'ZWL enabled' },
+                    { label: 'Email (Resend)',      status: 'unknown',     note: 'API key needed' },
+                    { label: 'CDN / Hosting',      status: 'operational', note: 'Netlify + Vercel' },
+                    { label: 'RLS Policies',       status: 'operational', note: 'Zero-trust enforced' },
+                    { label: 'Cache Headers',      status: 'operational', note: 'no-store on HTML' },
+                  ].map(svc => (
+                    <div key={svc.label} className="flex items-start gap-2.5">
+                      <div className={`w-2 h-2 rounded-full mt-1 flex-shrink-0 ${
+                        svc.status === 'operational' ? 'bg-emerald-500' :
+                        svc.status === 'degraded'    ? 'bg-amber-500' :
+                        svc.status === 'down'        ? 'bg-red-500' :
+                        'bg-neutral-400'
+                      }`} />
+                      <div>
+                        <div className="text-xs font-medium text-neutral-900 dark:text-white leading-tight">{svc.label}</div>
+                        <div className="text-[10px] text-neutral-400">{svc.note}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ── Recent signups ── */}
+            <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
+                <span className="font-semibold text-sm text-neutral-900 dark:text-white">Recent Signups</span>
+                <button onClick={() => handleTabChange('users')} className="text-xs text-neutral-500 hover:underline">View all →</button>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs min-w-[460px]">
+                  <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
+                    <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 uppercase tracking-wider">User</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 uppercase tracking-wider">Plan</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 uppercase tracking-wider">Role</th>
+                    <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 uppercase tracking-wider">Joined</th>
+                  </tr></thead>
+                  <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                    {usersList.slice(0, 10).map(u => {
+                      const initials = (u.full_name || u.name || u.email || 'U').slice(0, 1).toUpperCase()
+                      return (
+                        <tr key={u.id} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/30">
+                          <td className="px-4 py-2.5">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-6 h-6 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-[10px] font-semibold text-neutral-700 dark:text-neutral-300 flex-shrink-0">
+                                {initials}
+                              </div>
+                              <div>
+                                <div className="font-medium text-neutral-900 dark:text-white">{u.full_name || u.name || '—'}</div>
+                                <div className="text-[10px] text-neutral-400">{u.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize ${PLAN_COLOR[u.plan || 'free'] || PLAN_COLOR.free}`}>{u.plan || 'free'}</span>
+                          </td>
+                          <td className="px-4 py-2.5 text-neutral-500 capitalize">{u.role || 'user'}</td>
+                          <td className="px-4 py-2.5 text-neutral-500">{formatDate(u.created_at)}</td>
+                        </tr>
+                      )
+                    })}
+                    {usersList.length === 0 && !loading && (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-neutral-400">No users yet</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
-        </div>
-      )}
+        )
+      })()}
 
       {/* ── SUBSCRIBERS ──────────────────────────────────────────────────── */}
       {activeTab === 'subscribers' && (

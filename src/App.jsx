@@ -28,6 +28,7 @@ import InvoiceMakerPage from './pages/InvoiceMakerPage'
 import DebitNotePage from './pages/DebitNotePage'
 import CreditNotePage from './pages/CreditNotePage'
 import AdminPage from './pages/AdminPage'
+import ClientAccessPage from './pages/ClientAccessPage'
 import ProfilePage from './pages/ProfilePage'
 import WalletPage from './pages/WalletPage'
 import APIKeysPage from './pages/APIKeysPage'
@@ -112,6 +113,7 @@ function App() {
           <Route path="wallet" element={<WalletPage />} />
           <Route path="api-keys" element={<APIKeysPage />} />
           <Route path="admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+          <Route path="client-access" element={<AdminRoute><ClientAccessPage /></AdminRoute>} />
         </Route>
         
         {/* Redirect bare /admin → /app/admin (removes old standalone login gate) */}

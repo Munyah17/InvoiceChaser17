@@ -161,6 +161,12 @@ export default function Sidebar({ isOpen, onClose }) {
         <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>
       </svg>
     ),
+    'client-access': (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <path d="M23 11l-4 4-2-2"/>
+      </svg>
+    ),
   }
 
   const userInitial = settings?.full_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'
@@ -239,6 +245,21 @@ export default function Sidebar({ isOpen, onClose }) {
               </Link>
             )
           })}
+
+          <div className="px-2.5 pb-1 pt-3 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Tools</div>
+
+          <Link
+            to="/app/client-access"
+            onClick={handleNavClick}
+            className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
+              location.pathname === '/app/client-access'
+                ? 'bg-blue-600 text-white'
+                : 'text-neutral-400 hover:text-white hover:bg-white/5'
+            }`}
+          >
+            <span className="w-3.5 h-3.5 flex-shrink-0">{icons['client-access']}</span>
+            <span className="truncate">Client Access</span>
+          </Link>
 
           <div className="px-2.5 pb-1 pt-3 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Account</div>
 

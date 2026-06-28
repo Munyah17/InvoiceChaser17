@@ -44,7 +44,7 @@ export default function AppLayout() {
         />
       )}
 
-      <main className="lg:ml-[200px] min-h-screen flex flex-col">
+      <main className="lg:ml-[200px] min-h-screen flex flex-col overflow-x-hidden">
         {/* Mobile top bar */}
         <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-neutral-950 border-b border-neutral-800 sticky top-0 z-30">
           {/* Hamburger */}
@@ -148,7 +148,7 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <div className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full overflow-x-hidden min-w-0 max-w-full">
+        <div className="flex-1 p-4 lg:p-6 w-full overflow-x-hidden min-w-0 overscroll-contain">
           <Outlet />
         </div>
       </main>
