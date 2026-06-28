@@ -3,6 +3,18 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+
+  build: {
+    // Ensures browsers always fetch the latest JS/CSS after a deploy
+    rollupOptions: {
+      output: {
+        entryFileNames:  'assets/[name]-[hash].js',
+        chunkFileNames:  'assets/[name]-[hash].js',
+        assetFileNames:  'assets/[name]-[hash][extname]',
+      },
+    },
+  },
+
   server: {
     port: 4181,
     proxy: {
@@ -12,6 +24,7 @@ export default defineConfig({
       },
     },
   },
+
   preview: {
     port: 4181,
   },

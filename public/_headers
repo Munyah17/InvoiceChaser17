@@ -1,0 +1,17 @@
+# Netlify _headers — applied after netlify.toml headers, same priority rules apply
+# This file provides a belt-and-suspenders guarantee for the SPA entry point.
+
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate
+  Pragma: no-cache
+  Expires: 0
+  Surrogate-Control: no-store
+  X-Content-Type-Options: nosniff
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  Referrer-Policy: strict-origin-when-cross-origin

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useStore } from '../store/useStore'
 import { formatDate } from '../utils/dateFormat'
@@ -141,8 +141,21 @@ function generateApiKey(prefix) {
 export default function AdminPage() {
   const navigate = useNavigate()
   const { userRole } = useStore()
+  const [searchParams, setSearchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState('overview')
+  // Sync active tab with URL — sidebar links use ?tab=xxx
+  const tabFromUrl = searchParams.get('tab') || 'overview'
+  const [activeTab, setActiveTab] = useState(tabFromUrl)
+
+  useEffect(() => {
+    const t = searchParams.get('tab') || 'overview'
+    setActiveTab(t)
+  }, [searchParams])
+
+  const handleTabChange = (tabId) => {
+    setSearchParams({ tab: tabId }, { replace: true })
+    setActiveTab(tabId)
+  }
   const [loading, setLoading]     = useState(true)
 
   const [metrics, setMetrics] = useState({
@@ -276,31 +289,56 @@ export default function AdminPage() {
     <div className="animate-fade-in w-full">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
-        <div>
+        <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <div className="w-6 h-6 bg-neutral-900 dark:bg-white rounded flex items-center justify-center flex-shrink-0">
-              <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-white dark:stroke-neutral-950 fill-none stroke-2">
-                <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
+            <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
+              userRole === 'super_admin'
+                ? 'bg-white dark:bg-neutral-950'
+                : 'bg-blue-600'
+            }`}>
+              <svg viewBox="0 0 24 24" className={`w-3.5 h-3.5 fill-none stroke-2 ${
+                userRole === 'super_admin'
+                  ? 'stroke-neutral-950 dark:stroke-white'
+                  : 'stroke-white'
+              }`}>
+                {userRole === 'super_admin'
+                  ? <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z"/>
+                  : <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>
+                }
               </svg>
             </div>
-            <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Platform Admin</h1>
-            <span className="text-[9px] font-bold bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 px-2 py-0.5 rounded-full uppercase tracking-wider">
-              {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
+            <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">
+              {userRole === 'super_admin' ? 'Super Admin Portal' : 'Admin Portal'}
+            </h1>
+            <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+              userRole === 'super_admin'
+                ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-950'
+                : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+            }`}>
+              {userRole === 'super_admin' ? 'Owner' : 'Staff'}
             </span>
           </div>
-          <p className="text-xs text-neutral-500">
-            {userRole === 'super_admin' ? 'Full platform control · Permanent owner access' : 'Operations access · Manage users and subscriptions'}
+          <p className="text-xs text-neutral-500 truncate">
+            {userRole === 'super_admin'
+              ? 'Full platform control · Infrastructure · Staff · Lifetime access'
+              : 'Business operations · Client management · Revenue visibility'}
           </p>
         </div>
-        <button
-          onClick={fetchAll}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 self-start"
-        >
-          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2">
-            <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
-          </svg>
-          Refresh
-        </button>
+        <div className="flex items-center gap-2 self-start flex-shrink-0">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
+          </div>
+          <button
+            onClick={fetchAll}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800"
+          >
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 stroke-current fill-none stroke-2">
+              <path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* Tabs — scrollable on mobile */}
@@ -311,7 +349,7 @@ export default function AdminPage() {
             {tabs.map(t => (
               <button
                 key={t.id}
-                onClick={() => setActiveTab(t.id)}
+                onClick={() => handleTabChange(t.id)}
                 className={`px-3 py-2 text-xs font-medium rounded-t transition-colors -mb-px border-b-2 whitespace-nowrap flex-shrink-0
                   ${activeTab === t.id
                     ? 'border-neutral-900 dark:border-white text-neutral-900 dark:text-white'
@@ -361,7 +399,7 @@ export default function AdminPage() {
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
             <div className="flex items-center justify-between px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
               <span className="font-semibold text-sm text-neutral-900 dark:text-white">Recent Signups</span>
-              <button onClick={() => setActiveTab('users')} className="text-xs text-neutral-500 hover:underline">View all →</button>
+              <button onClick={() => handleTabChange('users')} className="text-xs text-neutral-500 hover:underline">View all →</button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs min-w-[400px]">

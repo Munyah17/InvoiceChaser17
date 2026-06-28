@@ -33,20 +33,20 @@ export default function AppLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0f]">
+    <div className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0f] overflow-x-hidden">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Mobile backdrop */}
+      {/* Mobile backdrop — sits above content, below sidebar */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-20 lg:hidden"
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       <main className="lg:ml-[200px] min-h-screen flex flex-col">
         {/* Mobile top bar */}
-        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-neutral-950 border-b border-neutral-800 sticky top-0 z-10">
+        <div className="lg:hidden flex items-center gap-3 px-4 py-3 bg-neutral-950 border-b border-neutral-800 sticky top-0 z-30">
           {/* Hamburger */}
           <button
             onClick={() => setSidebarOpen(true)}
@@ -148,7 +148,7 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <div className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full overflow-x-hidden min-w-0">
+        <div className="flex-1 p-4 lg:p-6 max-w-[1600px] w-full overflow-x-hidden min-w-0 max-w-full">
           <Outlet />
         </div>
       </main>

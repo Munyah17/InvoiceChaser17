@@ -26,6 +26,15 @@ export default function Dashboard() {
     }
   }, [user?.id])
 
+  // Wait for role to load before routing — prevents flash of client UI for staff
+  if (userRole === null) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-8 h-8 border-2 border-neutral-300 dark:border-neutral-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    )
+  }
+
   // Staff accounts go to their portal — conditional return after all hooks
   if (userRole === 'super_admin' || userRole === 'admin') return <Navigate to="/app/admin" replace />
 
@@ -131,24 +140,24 @@ export default function Dashboard() {
 
       {/* Stats - large clean numbers */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5">
           <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Total Revenue</div>
-          <div className="font-semibold text-2xl text-neutral-900 dark:text-white">{fmt(paidRev)}</div>
-          <div className="text-[11px] text-neutral-400 mt-0.5">{paid.length} paid invoices</div>
+          <div className="font-semibold text-lg sm:text-2xl text-neutral-900 dark:text-white truncate">{fmt(paidRev)}</div>
+          <div className="text-[11px] text-neutral-400 mt-0.5">{paid.length} paid</div>
         </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5">
           <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Pending</div>
-          <div className="font-semibold text-2xl text-neutral-900 dark:text-white">{fmt(pendRev)}</div>
+          <div className="font-semibold text-lg sm:text-2xl text-neutral-900 dark:text-white truncate">{fmt(pendRev)}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">{pending.length} pending</div>
         </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5">
           <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Overdue</div>
-          <div className="font-semibold text-2xl text-neutral-900 dark:text-white">{fmt(ovRev)}</div>
+          <div className="font-semibold text-lg sm:text-2xl text-neutral-900 dark:text-white truncate">{fmt(ovRev)}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">{overdue.length} overdue</div>
         </div>
-        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-3.5 sm:p-5">
           <div className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Drafts</div>
-          <div className="font-semibold text-2xl text-neutral-900 dark:text-white">{draft.length}</div>
+          <div className="font-semibold text-lg sm:text-2xl text-neutral-900 dark:text-white">{draft.length}</div>
           <div className="text-[11px] text-neutral-400 mt-0.5">unsent</div>
         </div>
       </div>
