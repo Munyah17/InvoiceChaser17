@@ -152,16 +152,16 @@ export default function CheckoutPage() {
             <button
               type="button"
               onClick={() => setGateway('stripe')}
-              className={`w-full flex items-center rounded-xl border transition-all px-6 py-4 ${
+              className={`w-full flex items-center rounded-xl border transition-all px-5 py-4 ${
                 gateway === 'stripe'
                   ? 'border-sky-500 bg-white dark:bg-neutral-800 shadow-md'
                   : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-neutral-400'
               }`}
             >
               <div className="flex-1 flex items-center">
-                <img src="/stripe-logo.png" alt="Stripe" className="h-10 w-auto object-contain" />
+                <img src="/stripe-payment-badge.png" alt="Stripe — Visa, Mastercard, Amex, Discover" className="h-11 w-auto object-contain" />
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
                 gateway === 'stripe' ? 'border-sky-500' : 'border-neutral-400'
               }`}>
                 {gateway === 'stripe' && <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />}
@@ -172,16 +172,16 @@ export default function CheckoutPage() {
             <button
               type="button"
               onClick={() => setGateway('paynow')}
-              className={`w-full flex items-center rounded-xl border transition-all px-6 py-4 ${
+              className={`w-full flex items-center rounded-xl border transition-all px-5 py-4 ${
                 gateway === 'paynow'
                   ? 'border-sky-500 bg-white dark:bg-neutral-800 shadow-md'
                   : 'border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 hover:border-neutral-400'
               }`}
             >
               <div className="flex-1 flex items-center">
-                <img src="/paynow-logo.png" alt="Paynow" className="h-12 w-auto object-contain" />
+                <img src="/paynow-badge-dark.svg" alt="Paynow — EcoCash / ZWL" className="h-11 w-auto object-contain" />
               </div>
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ml-3 ${
                 gateway === 'paynow' ? 'border-sky-500' : 'border-neutral-400'
               }`}>
                 {gateway === 'paynow' && <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />}

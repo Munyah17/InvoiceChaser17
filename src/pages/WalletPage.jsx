@@ -329,8 +329,8 @@ export default function WalletPage() {
                 <div className="font-semibold text-sm mb-3 text-neutral-900 dark:text-white">Payment method</div>
                 <div className="flex gap-2 mb-4">
                   {[
-                    { id: 'stripe', label: 'Stripe', sub: 'Card / Bank (International)' },
-                    { id: 'paynow', label: 'Paynow', sub: 'EcoCash / ZWL (Zimbabwe)' },
+                    { id: 'stripe', label: 'Stripe', sub: 'Card / Bank (International)', badge: '/stripe-payment-badge.png' },
+                    { id: 'paynow', label: 'Paynow', sub: 'EcoCash / ZWL (Zimbabwe)', badge: '/paynow-badge-dark.svg' },
                   ].map(gw => (
                     <button
                       key={gw.id}
@@ -342,6 +342,7 @@ export default function WalletPage() {
                     >
                       <div className="font-semibold">{gw.label}</div>
                       <div className="text-[10px] opacity-70 mt-0.5">{gw.sub}</div>
+                      <img src={gw.badge} alt={gw.label} className="h-5 w-auto object-contain mt-1.5 opacity-90" />
                     </button>
                   ))}
                 </div>
