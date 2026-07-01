@@ -9,8 +9,8 @@ export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('theme')
     if (stored) return stored
-    // Default to dark (black) mode if no preference stored
-    return 'dark'
+    // Default to light; respect OS dark preference
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
   })
 
   useEffect(() => {
