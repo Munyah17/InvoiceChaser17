@@ -9,6 +9,7 @@ const SUPER_TABS = [
   { id: 'overview',      label: 'Overview' },
   { id: 'subscribers',   label: 'Subscribers' },
   { id: 'users',         label: 'Users' },
+  { id: 'demo_requests', label: 'Demo Requests' },
   { id: 'analytics',     label: 'Analytics' },
   { id: 'api_keys',      label: 'API Keys' },
   { id: 'staff',         label: 'Staff' },
@@ -21,6 +22,7 @@ const ADMIN_TABS = [
   { id: 'overview',      label: 'Overview' },
   { id: 'subscribers',   label: 'Subscribers' },
   { id: 'users',         label: 'Users' },
+  { id: 'demo_requests', label: 'Demo Requests' },
   { id: 'analytics',     label: 'Analytics' },
   { id: 'api_keys',      label: 'API Keys' },
   { id: 'support',       label: 'Support' },
@@ -180,6 +182,8 @@ export default function AdminPage() {
   const [staffMsg, setStaffMsg]           = useState(null)
   const [escalations, setEscalations]     = useState([])
   const [escalationText, setEscalationText] = useState('')
+  const [demoRequests, setDemoRequests]   = useState([])
+  const [demoRequestsLoading, setDemoRequestsLoading] = useState(false)
 
   const [flags, setFlags] = useState(DEFAULT_FLAGS)
 
@@ -276,6 +280,39 @@ export default function AdminPage() {
     setFlags(prev => prev.map(f => f.id === id ? { ...f, enabled: !f.enabled } : f))
   }
 
+  const fetchDemoRequests = useCallback(async () => {
+    setDemoRequestsLoading(true)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-demo-requests', {
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      })
+      const data = await res.json()
+      if (res.ok) setDemoRequests(data.requests || [])
+    } catch (err) {
+      console.error('Demo requests fetch error:', err)
+    } finally {
+      setDemoRequestsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (activeTab === 'demo_requests') fetchDemoRequests()
+  }, [activeTab, fetchDemoRequests])
+
+  const handleDemoRequestAction = async (id, action) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    const res = await fetch('/api/admin-demo-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+      body: JSON.stringify({ id, action }),
+    })
+    if (res.ok) {
+      const { request } = await res.json()
+      setDemoRequests(prev => prev.map(r => r.id === id ? request : r))
+    }
+  }
+
   const fmt = (n) => `$${Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
   const filteredUsers = usersList.filter(u =>
@@ -345,7 +382,7 @@ export default function AdminPage() {
       {(() => {
         const tabs = userRole === 'super_admin' ? SUPER_TABS : ADMIN_TABS
         return (
-          <div className="flex gap-0.5 mb-6 border-b border-neutral-200 dark:border-neutral-800 overflow-x-auto">
+          <div className="flex gap-0.5 mb-6 border-b border-neutral-200 dark:border-neutral-800 overflow-x-auto overscroll-x-contain">
             {tabs.map(t => (
               <button
                 key={t.id}
@@ -565,7 +602,7 @@ export default function AdminPage() {
                 <span className="font-semibold text-sm text-neutral-900 dark:text-white">Recent Signups</span>
                 <button onClick={() => handleTabChange('users')} className="text-xs text-neutral-500 hover:underline">View all →</button>
               </div>
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overscroll-x-contain">
                 <table className="w-full text-xs min-w-[460px]">
                   <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                     <th className="px-4 py-2.5 text-left font-semibold text-neutral-500 uppercase tracking-wider">User</th>
@@ -622,7 +659,7 @@ export default function AdminPage() {
               <span className="font-semibold text-sm text-neutral-900 dark:text-white">All Subscriptions</span>
               <span className="text-xs text-neutral-500">{subsList.length} total</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[520px]">
                 <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                   <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">User ID</th>
@@ -677,7 +714,7 @@ export default function AdminPage() {
             <span className="text-xs text-neutral-500">{filteredUsers.length} users</span>
           </div>
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[500px]">
                 <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                   <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">User</th>
@@ -875,7 +912,7 @@ export default function AdminPage() {
               <span className="font-semibold text-sm text-neutral-900 dark:text-white">All Client API Keys</span>
               <span className="text-xs text-neutral-500">{clientApiKeys.length} total</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[540px]">
                 <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                   <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Key Name</th>
@@ -1010,7 +1047,7 @@ export default function AdminPage() {
               <span className="font-semibold text-sm text-neutral-900 dark:text-white">Current Staff</span>
               <span className="text-xs text-neutral-500">{staffList.length} members</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[400px]">
                 <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                   <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Name / Email</th>
@@ -1142,6 +1179,56 @@ export default function AdminPage() {
         </div>
       )}
 
+      {/* ── DEMO REQUESTS ────────────────────────────────────────────────── */}
+      {activeTab === 'demo_requests' && (
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
+          <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between">
+            <span className="font-semibold text-sm text-neutral-900 dark:text-white">Demo Requests</span>
+            <span className="text-xs text-neutral-500">{demoRequests.filter(r => r.status === 'pending').length} pending</span>
+          </div>
+          {demoRequestsLoading ? (
+            <div className="py-10 text-center text-xs text-neutral-400">Loading…</div>
+          ) : demoRequests.length > 0 ? (
+            <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+              {demoRequests.map(r => (
+                <div key={r.id} className="px-5 py-4 flex items-start gap-4">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-neutral-900 dark:text-white">{r.full_name}</span>
+                      <span className="text-xs text-neutral-400">{r.email}</span>
+                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full uppercase
+                        ${r.status === 'pending' ? 'bg-amber-100 text-amber-700' : r.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-neutral-200 text-neutral-600'}`}>
+                        {r.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-neutral-500 mt-1">
+                      {r.company_name || '—'} · {r.business_type || '—'} · {r.company_size || '—'}
+                    </div>
+                    {r.interests?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {r.interests.map(i => (
+                          <span key={i} className="text-[10px] px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300">{i}</span>
+                        ))}
+                      </div>
+                    )}
+                    {r.message && <div className="text-xs text-neutral-500 mt-2 italic">"{r.message}"</div>}
+                    <div className="text-[10px] text-neutral-400 mt-1">{new Date(r.created_at).toLocaleString()}</div>
+                  </div>
+                  {r.status === 'pending' && (
+                    <div className="flex gap-2 flex-shrink-0">
+                      <button onClick={() => handleDemoRequestAction(r.id, 'approve')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:opacity-90">Approve</button>
+                      <button onClick={() => handleDemoRequestAction(r.id, 'decline')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700">Decline</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-10 text-center text-xs text-neutral-400">No demo requests yet</div>
+          )}
+        </div>
+      )}
+
       {/* ── ROLES MATRIX ─────────────────────────────────────────────────── */}
       {activeTab === 'roles' && userRole === 'super_admin' && (
         <div className="space-y-5">
@@ -1212,7 +1299,7 @@ export default function AdminPage() {
             <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
               <span className="font-semibold text-sm text-neutral-900 dark:text-white">Full Privilege Matrix</span>
             </div>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[460px]">
                 <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                   <th className="px-4 py-2 text-left font-semibold text-neutral-500 uppercase">Privilege</th>
@@ -1315,7 +1402,7 @@ export default function AdminPage() {
             {[...apiKeys.oneWay, ...apiKeys.biDir].length === 0 ? (
               <p className="text-xs text-neutral-400 text-center py-4">No API keys yet</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-x-auto overscroll-x-contain">
                 <table className="w-full text-xs min-w-[420px]">
                   <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50">
                     <th className="px-3 py-2 text-left text-[10px] font-semibold text-neutral-500 uppercase">Name</th>
