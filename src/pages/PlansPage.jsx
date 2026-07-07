@@ -40,7 +40,7 @@ const PLANS = [
 const LIFETIME = {
   id: 'lifetime',
   name: 'Lifetime',
-  price: 99,
+  price: 89,
   period: 'one-time',
   features: ['Everything in Professional', 'Lifetime access', 'All future updates', 'No recurring fees', 'Priority support forever'],
   limits: { boqPerWeek: Infinity, invoicesPerMonth: Infinity },

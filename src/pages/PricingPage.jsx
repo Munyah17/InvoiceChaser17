@@ -216,7 +216,7 @@ export default function PricingPage() {
                 </ul>
               </div>
               <div className="mt-6 text-left">
-                <div className="font-display font-bold text-5xl lg:text-6xl text-white mb-1">$99<span className="text-xl text-neutral-300 font-normal">once</span></div>
+                <div className="font-display font-bold text-5xl lg:text-6xl text-white mb-1">$89<span className="text-xl text-neutral-300 font-normal">once</span></div>
                 <div className="text-neutral-400 mb-4">Best value for serious businesses</div>
                 <Button
                   variant="default"

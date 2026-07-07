@@ -50,7 +50,10 @@ export default function LandingPage() {
             </button>
 
             {/* Desktop CTA */}
-            <Link to="/login" className="hidden md:block">
+            <Link to="/login" className="hidden md:block text-sm font-medium text-neutral-600 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white transition-colors">
+              Login
+            </Link>
+            <Link to="/register" className="hidden md:block">
               <Button variant="primary" className="font-semibold">Get Started</Button>
             </Link>
 
@@ -91,9 +94,16 @@ export default function LandingPage() {
                 {item.label}
               </a>
             ))}
-            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 mt-1">
+            <div className="pt-2 border-t border-neutral-200 dark:border-neutral-800 mt-1 space-y-2">
               <Link
                 to="/login"
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-center w-full px-4 py-2.5 border border-neutral-300 dark:border-neutral-700 text-neutral-700 dark:text-neutral-300 rounded-xl text-sm font-semibold hover:bg-neutral-100 dark:hover:bg-neutral-900 transition-colors"
+              >
+                Login
+              </Link>
+              <Link
+                to="/register"
                 onClick={() => setMenuOpen(false)}
                 className="flex items-center justify-center w-full px-4 py-2.5 bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
               >
@@ -122,6 +132,11 @@ export default function LandingPage() {
             <Link to="/register" className="w-full sm:w-auto">
               <Button variant="primary" size="lg" className="font-semibold w-full sm:w-auto">
                 Get Started Free
+              </Button>
+            </Link>
+            <Link to="/request-demo" className="w-full sm:w-auto">
+              <Button variant="default" size="lg" className="font-semibold w-full sm:w-auto">
+                Request a Demo
               </Button>
             </Link>
             <a href="#how-it-works" className="text-sm font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">
@@ -155,45 +170,55 @@ export default function LandingPage() {
             Powerful tools designed to streamline your invoicing and improve cash flow.
           </p>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 max-w-3xl mx-auto justify-items-center">
           {[
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
             ), title: 'Auto Reminders', desc: 'Never chase a payment again with smart automated reminders.' },
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
               </svg>
             ), title: 'Smart Invoicing', desc: 'Create professional invoices in seconds with templates.' },
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <path d="M12 20V10"/><path d="M18 20V4"/><path d="M6 20v-4"/>
               </svg>
             ), title: 'Real-time Tracking', desc: 'Track status, history, and overdue accounts live.' },
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
               </svg>
             ), title: 'Global Payments', desc: 'Accept Stripe, Paynow, EcoCash, and bank transfers.' },
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
               </svg>
             ), title: 'PDF Export', desc: 'Download and share professional PDF invoices anywhere.' },
             { icon: (
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-7 h-7 sm:w-8 sm:h-8">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
             ), title: 'Customer Portal', desc: 'Let clients view and pay invoices from a branded portal.' },
+            { icon: (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              </svg>
+            ), title: 'API Access', desc: 'Integrate InvoiceChaser into your own apps with a simple, billed-per-use API.' },
+            { icon: (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-5 h-5">
+                <circle cx="9" cy="12" r="7"/><circle cx="15" cy="12" r="7"/>
+              </svg>
+            ), title: 'Debit & Credit Notes', desc: 'Issue debit and credit notes for adjustments and refunds in a few clicks.' },
           ].map((card, i) => (
-            <div key={i} className="bg-neutral-50 dark:bg-neutral-900 p-4 sm:p-5 lg:p-6 rounded-xl sm:rounded-2xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors">
-              <div className="text-neutral-950 dark:text-white mb-3 sm:mb-4">
+            <div key={i} className="w-full max-w-[160px] aspect-square bg-neutral-50 dark:bg-neutral-900 p-3 rounded-xl border border-neutral-200 dark:border-neutral-800 hover:border-neutral-400 dark:hover:border-neutral-600 transition-colors flex flex-col items-center justify-center text-center">
+              <div className="text-neutral-950 dark:text-white mb-2">
                 {card.icon}
               </div>
-              <h3 className="font-semibold text-neutral-950 dark:text-white mb-1 sm:mb-2 text-sm sm:text-base">{card.title}</h3>
-              <p className="text-neutral-500 dark:text-neutral-400 text-xs sm:text-sm leading-relaxed">{card.desc}</p>
+              <h3 className="font-semibold text-neutral-950 dark:text-white mb-1 text-xs">{card.title}</h3>
+              <p className="text-neutral-500 dark:text-neutral-400 text-[10px] leading-snug">{card.desc}</p>
             </div>
           ))}
         </div>
@@ -329,6 +354,56 @@ export default function LandingPage() {
             </ul>
             <Link to="/register?plan=business" className="block">
               <Button variant="default" className="w-full font-medium bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Enterprise Plan */}
+      <section id="enterprise" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 sm:pb-20">
+        <div className="max-w-4xl mx-auto bg-neutral-900 rounded-2xl sm:rounded-3xl border border-neutral-800 p-6 sm:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-800 text-neutral-300 rounded-full text-xs font-semibold mb-4">
+              Custom Solution
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-white mb-3 tracking-tight">Enterprise</h2>
+            <p className="text-neutral-300 mb-4">Tailored for large organizations that need a custom-fit solution — dedicated support, custom SLAs and flexible integrations built around how your business works.</p>
+            <ul className="text-sm text-white space-y-2">
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Dedicated account manager</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Custom SLA & integrations</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-white fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Unlimited team users</li>
+            </ul>
+          </div>
+          <div className="text-center md:text-right flex-shrink-0 md:w-56">
+            <div className="font-display font-bold text-3xl text-white mb-1">Custom pricing</div>
+            <p className="text-sm text-neutral-400 mb-4">Talk to us about your needs</p>
+            <Link to="/register?plan=enterprise" className="block">
+              <Button variant="default" className="w-full font-semibold bg-white text-black hover:bg-neutral-200 border-white text-center justify-center">Contact Us</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Lifetime Plan */}
+      <section id="lifetime" className="max-w-7xl mx-auto px-4 sm:px-6 pb-12 sm:pb-20">
+        <div className="max-w-4xl mx-auto bg-neutral-100 dark:bg-neutral-900/50 rounded-2xl sm:rounded-3xl border-2 border-neutral-200 dark:border-white p-6 sm:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
+          <div className="flex-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-neutral-950 text-white dark:bg-white dark:text-neutral-950 rounded-full text-xs font-semibold mb-4">
+              Once-off Payment
+            </div>
+            <h2 className="font-display font-bold text-2xl sm:text-3xl text-neutral-950 dark:text-white mb-3 tracking-tight">Lifetime Plan</h2>
+            <p className="text-neutral-600 dark:text-neutral-300 mb-4">Pay once, use InvoiceChaser forever. Unlimited usage every month under a fair usage policy — no subscriptions, no recurring fees.</p>
+            <ul className="text-sm text-neutral-700 dark:text-neutral-200 space-y-2">
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Everything in Professional</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>Unlimited monthly usage (Fair Usage Policy applies)</li>
+              <li className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="w-4 h-4 stroke-neutral-400 fill-none stroke-2 flex-shrink-0"><polyline points="20 6 9 17 4 12"/></svg>All future updates included, forever</li>
+            </ul>
+          </div>
+          <div className="text-center md:text-right flex-shrink-0 md:w-56">
+            <div className="font-display font-bold text-4xl text-neutral-950 dark:text-white mb-1">$89<span className="text-lg text-neutral-500 dark:text-neutral-300 font-normal"> once</span></div>
+            <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">Then free, forever</p>
+            <Link to="/register?plan=lifetime" className="block">
+              <Button variant="primary" className="w-full font-semibold text-center justify-center">Get Lifetime Access</Button>
             </Link>
           </div>
         </div>

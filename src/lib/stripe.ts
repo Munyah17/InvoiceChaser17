@@ -161,7 +161,7 @@ export const PLAN_PRICES = {
     name: 'Business Plan',
   },
   lifetime: {
-    oneTime: 9900, // $99.00
+    oneTime: 8900, // $89.00
     name: 'Lifetime Access',
   },
 }

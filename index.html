@@ -5,14 +5,31 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>InvoiceChaser — Smart Invoice Management</title>
+    <meta name="description" content="Automated invoice chasing and payment collection. Send smart reminders, accept Stripe and Paynow payments, and get paid faster." />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://invoicechaserapp.vercel.app/" />
+    <meta property="og:site_name" content="InvoiceChaser" />
+    <meta property="og:title" content="InvoiceChaser — Smart Invoice Management" />
+    <meta property="og:description" content="Automated invoice chasing and payment collection. Send smart reminders, accept Stripe and Paynow payments, and get paid faster." />
+    <meta property="og:image" content="https://invoicechaserapp.vercel.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="InvoiceChaser — Smart Invoice Management" />
+    <meta name="twitter:description" content="Automated invoice chasing and payment collection. Send smart reminders, accept Stripe and Paynow payments, and get paid faster." />
+    <meta name="twitter:image" content="https://invoicechaserapp.vercel.app/og-image.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <!-- Apply theme before first paint to prevent flash -->
     <script>
       (function () {
-        var stored = localStorage.getItem('theme');
-        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        if (stored === 'dark' || (!stored && prefersDark)) {
+        // Light is always the default — only an explicit user toggle switches to dark.
+        if (localStorage.getItem('theme') === 'dark') {
           document.documentElement.classList.add('dark');
         }
       })();

@@ -44,7 +44,7 @@ const PLANS = [
   {
     id: 'lifetime',
     name: 'Lifetime',
-    price: 99,
+    price: 89,
     period: 'one-time',
     description: 'Pay once, use forever',
     features: ['All Pro features', 'Lifetime updates', 'Priority support'],
