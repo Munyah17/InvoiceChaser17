@@ -48,6 +48,45 @@ export default async function handler(req, res) {
   // Handle checkout session completion
   if (stripeEvent.type === 'checkout.session.completed') {
     const session = stripeEvent.data.object
+
+    // ── Invoice payment (debtor paying via a reminder link) ────────────────
+    if (session.metadata?.type === 'invoice_payment') {
+      if (supabase) {
+        try {
+          const { invoice_id, invoice_number, creditor_user_id, base_amount, fee_amount } = session.metadata
+          await supabase.from('invoices').update({ status: 'paid', updated_at: new Date().toISOString() }).eq('id', invoice_id)
+
+          await supabase.from('payments').insert({
+            invoice_id,
+            amount: session.amount_total / 100,
+            currency: session.currency?.toUpperCase() || 'USD',
+            method: 'stripe',
+            status: 'completed',
+            transaction_ref: session.id,
+            metadata: { type: 'invoice_payment', invoice_number, base_amount, debtor_fee: fee_amount },
+          })
+
+          // Creditor's 10% success fee, deducted from their wallet
+          const creditorFee = Math.round(parseFloat(base_amount) * 0.10 * 100) / 100
+          const { data: wallet } = await supabase.from('wallets').select('balance').eq('user_id', creditor_user_id).single()
+          if (wallet) {
+            await supabase.from('wallets').update({ balance: parseFloat(wallet.balance) - creditorFee, updated_at: new Date().toISOString() }).eq('user_id', creditor_user_id)
+          }
+          await supabase.from('wallet_transactions').insert({
+            user_id: creditor_user_id,
+            invoice_id,
+            amount: creditorFee,
+            type: 'debit',
+            description: `Collection fee (10%) — Invoice ${invoice_number} paid via reminder link`,
+            reference: session.id,
+          })
+        } catch (dbError) {
+          console.error('Invoice payment webhook error:', dbError)
+        }
+      }
+      return res.status(200).json({ received: true })
+    }
+
     const { user_id, plan_id } = session.metadata || {}
     const customerId = session.customer
     const subscriptionId = session.subscription

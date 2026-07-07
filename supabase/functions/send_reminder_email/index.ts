@@ -32,8 +32,14 @@ function emailsPerDay(daysOverdue: number): number {
   return 6                          // 30+ days: every ~4 hours — maximum pressure
 }
 
+const DEBTOR_FEE_RATE = 0.025
+
 function buildEmailHtml(invoice: any, creditorName: string, daysOverdue: number): string {
-  const amount = parseFloat(invoice.amount).toFixed(2)
+  const currency = invoice.currency || 'USD'
+  const baseAmount = parseFloat(invoice.amount)
+  const fee = Math.round(baseAmount * DEBTOR_FEE_RATE * 100) / 100
+  const total = Math.round((baseAmount + fee) * 100) / 100
+  const amount = total.toFixed(2)
   const urgencyColor = daysOverdue <= 0 ? '#1a1a1a' : daysOverdue <= 7 ? '#d97706' : '#dc2626'
 
   const stripePayUrl = `${APP_URL}/pay/${invoice.invoice_number}?gateway=stripe`
@@ -64,8 +70,12 @@ function buildEmailHtml(invoice: any, creditorName: string, daysOverdue: number)
     <table style="width:100%;border-collapse:collapse">
       <tr><td style="color:#6b7280;font-size:13px;padding:5px 0">Invoice #</td>
           <td style="text-align:right;font-weight:600;color:#1a1a1a">${invoice.invoice_number}</td></tr>
-      <tr><td style="color:#6b7280;font-size:13px;padding:5px 0">Amount Due</td>
-          <td style="text-align:right;font-weight:700;font-size:20px;color:${urgencyColor}">USD ${amount}</td></tr>
+      <tr><td style="color:#6b7280;font-size:13px;padding:5px 0">Invoice Amount</td>
+          <td style="text-align:right;color:#1a1a1a">${currency} ${baseAmount.toFixed(2)}</td></tr>
+      <tr><td style="color:#6b7280;font-size:13px;padding:5px 0">Payment Processing Fee (${(DEBTOR_FEE_RATE * 100).toFixed(1)}%)</td>
+          <td style="text-align:right;color:#1a1a1a">${currency} ${fee.toFixed(2)}</td></tr>
+      <tr><td style="color:#6b7280;font-size:13px;padding:5px 0;font-weight:700">Total Due</td>
+          <td style="text-align:right;font-weight:700;font-size:20px;color:${urgencyColor}">${currency} ${amount}</td></tr>
       <tr><td style="color:#6b7280;font-size:13px;padding:5px 0">Due Date</td>
           <td style="text-align:right;color:#1a1a1a">${invoice.due_date}</td></tr>
       ${invoice.description ? `<tr><td style="color:#6b7280;font-size:13px;padding:5px 0">For</td><td style="text-align:right;color:#1a1a1a">${invoice.description}</td></tr>` : ''}
@@ -156,7 +166,7 @@ serve(async (req) => {
     // Load unpaid invoices with creditor profile
     const { data: invoices } = await supabase
       .from('invoices')
-      .select('id, invoice_number, customer_name, customer_email, amount, due_date, description, user_id, users(full_name, company_name)')
+      .select('id, invoice_number, customer_name, customer_email, amount, currency, due_date, description, user_id, users(full_name, company_name)')
       .in('status', ['pending', 'overdue'])
       .not('customer_email', 'is', null)
 

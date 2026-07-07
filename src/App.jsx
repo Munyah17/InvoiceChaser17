@@ -15,6 +15,8 @@ const RegisterPage       = lazy(() => import('./pages/RegisterPage'))
 const PricingPage        = lazy(() => import('./pages/PricingPage'))
 const PaymentSuccessPage = lazy(() => import('./pages/PaymentSuccessPage'))
 const PaymentFailurePage = lazy(() => import('./pages/PaymentFailurePage'))
+const PayInvoicePage     = lazy(() => import('./pages/PayInvoicePage'))
+const RequestDemoPage    = lazy(() => import('./pages/RequestDemoPage'))
 const CheckoutPage       = lazy(() => import('./pages/CheckoutPage'))
 const Dashboard          = lazy(() => import('./pages/Dashboard'))
 const InvoicesPage       = lazy(() => import('./pages/InvoicesPage'))
@@ -93,6 +95,8 @@ function App() {
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/payment-success" element={<PaymentSuccessPage />} />
             <Route path="/payment-failure" element={<PaymentFailurePage />} />
+            <Route path="/pay/:invoiceNumber" element={<PayInvoicePage />} />
+            <Route path="/request-demo" element={<RequestDemoPage />} />
             <Route path="/checkout" element={<CheckoutPage />} />
 
             {/* Protected routes */}

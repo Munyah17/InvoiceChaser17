@@ -4,9 +4,10 @@ import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 import Input from '../components/Input'
 import { formatDate } from '../utils/dateFormat'
+import { generateReminderEmail } from '../utils/invoiceGenerator'
 
 export default function RemindersPage() {
-  const { user, reminders, templates, setTemplates, updateReminder, loadReminders } = useStore()
+  const { user, reminders, templates, setTemplates, updateReminder, loadReminders, settings } = useStore()
   const [activeTab, setActiveTab] = useState('log')
   const [activeTmpl, setActiveTmpl] = useState('3_days_before')
   const [subject, setSubject] = useState('')
@@ -56,18 +57,17 @@ export default function RemindersPage() {
       return
     }
 
-    const dueDate = new Date(invoice.due_date).toLocaleDateString()
-    const subject = `Payment Reminder: Invoice ${invoice.invoice_number}`
-    const html = `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-      <h2 style="color:#1a1a1a">Payment Reminder</h2>
-      <p>Dear ${invoice.customer_name || 'Customer'},</p>
-      <p>This is a reminder that invoice <strong>${invoice.invoice_number}</strong> for <strong>$${invoice.amount}</strong> was due on <strong>${dueDate}</strong>.</p>
-      <p>Please arrange payment at your earliest convenience.</p>
-    </div>`
+    const paymentLink = invoice.payment_link || `${window.location.origin}/pay/${invoice.invoice_number}`
+    const { subject, html, text } = generateReminderEmail(
+      invoice,
+      { name: invoice.customer_name, email: invoice.customer_email },
+      { company_name: settings.company_name },
+      paymentLink
+    )
 
     try {
       const { error: fnError } = await supabase.functions.invoke('send_reminder_email', {
-        body: { to: invoice.customer_email, subject, html }
+        body: { to: invoice.customer_email, subject, html, text }
       })
       if (fnError) throw fnError
       await updateReminder(reminder.id, { status: 'sent', sent_at: new Date().toISOString() })
