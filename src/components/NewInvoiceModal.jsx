@@ -3,13 +3,15 @@ import Modal from './Modal'
 import Input from './Input'
 import Select from './Select'
 import Button from './Button'
+import { CURRENCIES } from '../utils/currency'
 
-export default function NewInvoiceModal({ isOpen, onClose, onSubmit }) {
+export default function NewInvoiceModal({ isOpen, onClose, onSubmit, defaultCurrency = 'USD' }) {
   const [formData, setFormData] = useState({
     num: '',
     cust: '',
     email: '',
     amt: '',
+    currency: defaultCurrency,
     due: '',
     status: 'pending',
     desc: '',
@@ -25,13 +27,14 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit }) {
         cust: '',
         email: '',
         amt: '',
+        currency: defaultCurrency,
         due: '',
         status: 'pending',
         desc: '',
         notes: '',
       })
     }
-  }, [isOpen])
+  }, [isOpen, defaultCurrency])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -102,9 +105,9 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit }) {
               required
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Amount (USD) *</label>
+              <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Amount *</label>
               <input
                 type="number"
                 className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors placeholder:text-neutral-400"
@@ -115,6 +118,16 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit }) {
                 step="0.01"
                 required
               />
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Currency</label>
+              <select
+                className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-800 text-neutral-900 dark:text-white outline-none focus:border-neutral-400 dark:focus:border-neutral-500 transition-colors"
+                value={formData.currency}
+                onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
+              >
+                {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+              </select>
             </div>
             <div>
               <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Due Date *</label>

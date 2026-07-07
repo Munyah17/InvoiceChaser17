@@ -9,9 +9,10 @@ import Input from '../components/Input'
 import Select from '../components/Select'
 import NewInvoiceModal from '../components/NewInvoiceModal'
 import { formatDate } from '../utils/dateFormat'
+import { formatCurrency } from '../utils/currency'
 
 export default function Dashboard() {
-  const { user, userRole, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading } = useStore()
+  const { user, userRole, invoices, reminders, addInvoice, addReminder, loadInvoices, loadReminders, loading, settings } = useStore()
 
   const [showModal, setShowModal] = useState(false)
   const [toast, setToast] = useState(null)
@@ -38,7 +39,7 @@ export default function Dashboard() {
   // Staff accounts go to their portal — conditional return after all hooks
   if (userRole === 'super_admin' || userRole === 'admin') return <Navigate to="/app/admin" replace />
 
-  const fmt = (n, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c }).format(n)
+  const fmt = (n, c = settings.default_currency || 'USD') => formatCurrency(n, c)
   const fmtDate = (d) => formatDate(d)
 
   const paid = invoices.filter(i => i.status === 'paid')
@@ -57,7 +58,7 @@ export default function Dashboard() {
       customer_name: invoiceData.cust,
       customer_email: invoiceData.email,
       amount: invoiceData.amt,
-      currency: 'USD',
+      currency: invoiceData.currency || settings.default_currency || 'USD',
       due_date: invoiceData.due,
       status: invoiceData.status,
       description: invoiceData.desc,
@@ -123,7 +124,7 @@ export default function Dashboard() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Overview</h1>
         </div>
@@ -185,7 +186,7 @@ export default function Dashboard() {
             <span className="font-semibold text-xs text-neutral-900 dark:text-white">Recent Invoices</span>
             <Link to="/app/invoices" className="text-[11px] text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">View all</Link>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overscroll-x-contain">
           <table className="w-full min-w-[480px]">
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
               {invoices.slice(0, 5).map((inv) => (
@@ -248,7 +249,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <NewInvoiceModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleCreateInvoice} />
+      <NewInvoiceModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleCreateInvoice} defaultCurrency={settings.default_currency || 'USD'} />
     </div>
   )
 }

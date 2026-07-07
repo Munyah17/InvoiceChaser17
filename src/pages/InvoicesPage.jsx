@@ -10,9 +10,10 @@ import Select from '../components/Select'
 import NewInvoiceModal from '../components/NewInvoiceModal'
 import { generateInvoicePDF, generateReminderEmail } from '../utils/invoiceGenerator'
 import { formatDate } from '../utils/dateFormat'
+import { formatCurrency } from '../utils/currency'
 
 export default function InvoicesPage() {
-  const { user, invoices, setInvoices, addInvoice, addReminder, loadInvoices, canGenerateInvoice, incrementInvoiceGeneration, userPlan } = useStore()
+  const { user, invoices, setInvoices, addInvoice, addReminder, loadInvoices, canGenerateInvoice, incrementInvoiceGeneration, userPlan, settings } = useStore()
   const [showModal, setShowModal] = useState(false)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
@@ -25,7 +26,7 @@ export default function InvoicesPage() {
     }
   }, [user?.id])
 
-  const fmt = (n, c = 'USD') => new Intl.NumberFormat('en-US', { style: 'currency', currency: c }).format(n)
+  const fmt = (n, c = settings.default_currency || 'USD') => formatCurrency(n, c)
   const fmtDate = (d) => formatDate(d)
 
   const filteredInvoices = invoices.filter(i => {
@@ -47,7 +48,7 @@ export default function InvoicesPage() {
       customer_name: invoiceData.cust,
       customer_email: invoiceData.email,
       amount: invoiceData.amt,
-      currency: 'USD',
+      currency: invoiceData.currency || settings.default_currency || 'USD',
       due_date: invoiceData.due,
       status: invoiceData.status,
       description: invoiceData.desc,
@@ -240,7 +241,7 @@ export default function InvoicesPage() {
             cust: row.customer_name,
             email: row.customer_email,
             amt: parseFloat(row.amount) || 0,
-            currency: 'USD',
+            currency: row.currency || settings.default_currency || 'USD',
             due: row.due_date,
             status: 'pending',
             desc: row.description || '',
@@ -328,7 +329,7 @@ export default function InvoicesPage() {
 
       {/* Table */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overscroll-x-contain">
         <table className="w-full border-collapse min-w-[640px]">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50">
@@ -386,7 +387,7 @@ export default function InvoicesPage() {
         </div>
       </div>
 
-      <NewInvoiceModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleCreateInvoice} />
+      <NewInvoiceModal isOpen={showModal} onClose={() => setShowModal(false)} onSubmit={handleCreateInvoice} defaultCurrency={settings.default_currency || 'USD'} />
     </div>
   )
 }

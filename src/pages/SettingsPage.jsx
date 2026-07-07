@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { signOut, supabase } from '../lib/supabase'
+import { CURRENCIES } from '../utils/currency'
 
 export default function SettingsPage() {
   const { settings, setSettings, user, logout, loadProfile, updateProfile, userPlan } = useStore()
@@ -11,6 +12,7 @@ export default function SettingsPage() {
     phone: '',
     business_contact: '',
     address: '',
+    default_currency: settings.default_currency || 'USD',
   })
   const [prefs, setPrefs] = useState({
     theme: settings.theme || 'system',
@@ -40,6 +42,7 @@ export default function SettingsPage() {
       full_name: settings.full_name || '',
       company_name: settings.company_name || '',
       email: settings.email || user?.email || '',
+      default_currency: settings.default_currency || 'USD',
     }))
   }, [settings, user])
 
@@ -53,6 +56,7 @@ export default function SettingsPage() {
       full_name: formData.full_name,
       company_name: formData.company_name,
       phone: formData.phone,
+      default_currency: formData.default_currency,
     })
     if (error) showToast('Failed to save profile', 'error')
     else showToast('Profile saved')
@@ -132,6 +136,12 @@ export default function SettingsPage() {
               <div>
                 <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Business Contact</label>
                 <input className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.business_contact} onChange={e => setFormData({...formData, business_contact: e.target.value})} placeholder="Alt contact / email" />
+              </div>
+              <div>
+                <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Default Currency</label>
+                <select className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={formData.default_currency} onChange={e => setFormData({...formData, default_currency: e.target.value})}>
+                  {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code} — {c.label}</option>)}
+                </select>
               </div>
               <div className="col-span-2">
                 <label className="block text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-1">Address</label>

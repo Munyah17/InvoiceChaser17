@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import jsPDF from 'jspdf'
 import autoTable from 'jspdf-autotable'
-
-function fmt(n) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
-}
+import { useStore } from '../store/useStore'
+import { CURRENCIES, formatCurrency } from '../utils/currency'
 
 export default function InvoiceMakerPage() {
+  const { settings } = useStore()
+  const [currency, setCurrency] = useState(settings.default_currency || 'USD')
+  const fmt = (n) => formatCurrency(n, currency)
+
   const [company, setCompany] = useState({
     name: 'Your Company',
     address: '123 Business Street\nCity, Country',
@@ -193,7 +195,7 @@ export default function InvoiceMakerPage() {
 
   return (
     <div className="animate-fade-in max-w-5xl">
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Invoice Maker</h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Create and export professional invoices</p>
@@ -289,7 +291,7 @@ export default function InvoiceMakerPage() {
           {/* Line Items */}
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
             <h2 className="text-xs font-semibold text-neutral-500 dark:text-neutral-400 uppercase tracking-wider mb-3">Line Items</h2>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
             <div className="min-w-[480px] space-y-2">
               {items.map((item, idx) => (
                 <div key={item.id} className="grid grid-cols-12 gap-2 items-center">
@@ -322,13 +324,19 @@ export default function InvoiceMakerPage() {
 
           {/* Totals */}
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-5">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div>
+                <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Currency</label>
+                <select className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={currency} onChange={e => setCurrency(e.target.value)}>
+                  {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+                </select>
+              </div>
               <div>
                 <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Tax Rate (%)</label>
                 <input type="number" min="0" step="0.01" className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={taxRate} onChange={e => setTaxRate(parseFloat(e.target.value) || 0)} />
               </div>
               <div>
-                <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Discount (USD)</label>
+                <label className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Discount ({currency})</label>
                 <input type="number" min="0" step="0.01" className="w-full mt-1 px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none" value={discount} onChange={e => setDiscount(parseFloat(e.target.value) || 0)} />
               </div>
               <div className="flex flex-col justify-end text-right">

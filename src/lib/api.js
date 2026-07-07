@@ -28,7 +28,7 @@ export const getUserRole = async () => {
 export const getProfile = async (userId) => {
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, company_name, role, plan, created_at')
+    .select('id, full_name, email, company_name, role, plan, default_currency, created_at')
     .eq('id', userId)
     .single()
   return { data, error }

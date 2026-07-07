@@ -4,9 +4,10 @@ import Button from '../components/Button'
 import Modal from '../components/Modal'
 import Toast from '../components/Toast'
 import Input from '../components/Input'
+import { formatCurrency } from '../utils/currency'
 
 export default function CustomersPage() {
-  const { user, invoices, customers, addCustomer, deleteCustomer, loadCustomers } = useStore()
+  const { user, invoices, customers, addCustomer, deleteCustomer, loadCustomers, settings } = useStore()
   const [showModal, setShowModal] = useState(false)
   const [search, setSearch] = useState('')
   const [toast, setToast] = useState(null)
@@ -42,7 +43,7 @@ export default function CustomersPage() {
     (c.company || '').toLowerCase().includes(search.toLowerCase())
   )
 
-  const fmt = (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n)
+  const fmt = (n) => formatCurrency(n, settings.default_currency || 'USD')
 
   const colors = [
     { bg: '#dbeafe', text: '#1e40af' },
@@ -90,7 +91,7 @@ export default function CustomersPage() {
     <div className="animate-fade-in">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-      <div className="flex items-start justify-between mb-5 gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-5 gap-3">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Customers</h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">{customerList.length} total</p>
@@ -113,7 +114,7 @@ export default function CustomersPage() {
       </div>
 
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overscroll-x-contain">
         <table className="w-full border-collapse min-w-[500px]">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50">

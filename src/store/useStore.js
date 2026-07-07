@@ -33,6 +33,7 @@ export const useStore = create(
         full_name: '',
         company_name: '',
         email: '',
+        default_currency: 'USD',
       },
       userPlan: 'free',
       boqGenerations: { count: 0, weekStart: null },
@@ -203,7 +204,7 @@ export const useStore = create(
         const { data, error } = await api.getProfile(userId)
         if (!error && data) {
           set({
-            settings: { full_name: data.full_name || '', company_name: data.company_name || '', email: data.email || '' },
+            settings: { full_name: data.full_name || '', company_name: data.company_name || '', email: data.email || '', default_currency: data.default_currency || 'USD' },
             _profileTs: Date.now(),
           })
         }
@@ -308,11 +309,12 @@ export const useStore = create(
         set({ loading: true })
         const { data, error } = await api.updateProfile(userId, updates)
         if (!error && data) {
-          set({ 
+          set({
             settings: {
               full_name: data.full_name || '',
               company_name: data.company_name || '',
               email: data.email || '',
+              default_currency: data.default_currency || 'USD',
             }
           })
         }
