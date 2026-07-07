@@ -88,7 +88,7 @@ export default function ProformaPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Proforma Invoice</h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">Create pre-payment invoices</p>
@@ -148,7 +148,7 @@ export default function ProformaPage() {
             <span className="text-[10px] font-medium text-neutral-500 dark:text-neutral-400 uppercase tracking-wider">Line Items</span>
             <button onClick={addItem} className="text-xs text-neutral-900 dark:text-white font-medium hover:underline">+ Add Item</button>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto overscroll-x-contain">
           <div className="min-w-[460px] space-y-2">
             {items.map((item, i) => (
               <div key={i} className="flex gap-2 items-center">

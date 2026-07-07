@@ -337,12 +337,12 @@ export default function BOQPage() {
   return (
     <div className="animate-fade-in max-w-5xl">
       {/* Header */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Bill of Quantities (BOQ)</h1>
           <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">AI-powered construction cost estimation</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button onClick={handleExportCSV} className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">CSV</button>
           <button onClick={handleExportExcel} className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">Excel</button>
           <button onClick={handleExportPDF} className="px-3 py-1.5 text-xs font-medium bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-lg text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors">PDF</button>
@@ -453,7 +453,7 @@ export default function BOQPage() {
             <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
           {searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg max-h-48 overflow-y-auto z-10">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-lg max-h-48 overflow-y-auto overscroll-y-contain z-10">
               {searchResults.map((material) => (
                 <button
                   key={material.id}
@@ -494,7 +494,7 @@ export default function BOQPage() {
 
       {/* BOQ Table */}
       <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden mb-4">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto overscroll-x-contain">
         <table className="w-full min-w-[700px] border-collapse">
           <thead>
             <tr className="bg-neutral-50 dark:bg-neutral-800/50">

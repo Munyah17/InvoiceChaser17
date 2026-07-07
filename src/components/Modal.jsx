@@ -26,7 +26,7 @@ export default function Modal({ isOpen, onClose, children, size = 'default' }) {
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className={`relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-glow ${sizes[size]}`}>
+      <div className={`relative bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-glow max-h-[90vh] overflow-y-auto overscroll-y-contain ${sizes[size]}`}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 text-neutral-400 hover:text-neutral-200 transition-colors"

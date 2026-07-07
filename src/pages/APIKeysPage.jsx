@@ -169,7 +169,7 @@ export default function APIKeysPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">API Keys</h1>
           <p className="text-xs text-neutral-500 mt-0.5">Integrate InvoiceChaser with your apps. Requests are billed from your wallet.</p>
@@ -319,14 +319,14 @@ export default function APIKeysPage() {
             <div className="space-y-3 text-xs text-neutral-600 dark:text-neutral-400">
               <div>
                 <div className="font-medium text-neutral-900 dark:text-white mb-1">Authentication</div>
-                <div className="bg-neutral-950 rounded-lg px-4 py-3 font-mono text-[11px] text-neutral-300 overflow-x-auto">
+                <div className="bg-neutral-950 rounded-lg px-4 py-3 font-mono text-[11px] text-neutral-300 overflow-x-auto overscroll-x-contain">
                   <div className="text-neutral-500">// All requests need your secret key in the header</div>
                   <div>Authorization: Bearer ic_sk_live_your_secret_key</div>
                 </div>
               </div>
               <div>
                 <div className="font-medium text-neutral-900 dark:text-white mb-1">Example — list invoices</div>
-                <div className="bg-neutral-950 rounded-lg px-4 py-3 font-mono text-[11px] text-neutral-300 overflow-x-auto whitespace-pre">{`GET https://api.invoicechaser.app/v1/invoices
+                <div className="bg-neutral-950 rounded-lg px-4 py-3 font-mono text-[11px] text-neutral-300 overflow-x-auto overscroll-x-contain whitespace-pre">{`GET https://api.invoicechaser.app/v1/invoices
 Authorization: Bearer ic_sk_live_...
 
 // Response deducts $0.001 from wallet`}</div>

@@ -17,7 +17,7 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   overflow-x: clip;
   overscroll-behavior-y: none;
-  touch-action: pan-y;
+  overscroll-behavior-x: none;
   position: relative;
 }
 

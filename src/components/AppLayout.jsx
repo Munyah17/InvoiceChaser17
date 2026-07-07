@@ -35,7 +35,7 @@ export default function AppLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0f] overflow-x-hidden">
+    <div className="min-h-screen bg-neutral-50 dark:bg-[#0a0a0f] overflow-x-clip">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Mobile backdrop — sits above content, below sidebar */}
@@ -46,7 +46,7 @@ export default function AppLayout() {
         />
       )}
 
-      <main className="lg:ml-[200px] min-h-screen flex flex-col overflow-x-hidden">
+      <main className="lg:ml-[200px] min-h-screen flex flex-col overflow-x-clip">
         {/* Mobile top bar */}
         <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-neutral-950 dark:bg-neutral-950 border-b border-neutral-800 sticky top-0 z-30">
           {/* Hamburger */}
@@ -145,7 +145,7 @@ export default function AppLayout() {
           </div>
         </div>
 
-        <div className="flex-1 p-4 lg:p-6 w-full overflow-x-hidden min-w-0 overscroll-contain">
+        <div className="flex-1 p-4 lg:p-6 w-full overflow-x-clip min-w-0">
           <Outlet />
         </div>
       </main>

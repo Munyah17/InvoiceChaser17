@@ -50,7 +50,7 @@ export default function WalletPage() {
       if (!w && fetchError?.code === 'PGRST116') {
         const { data: created } = await supabase
           .from('wallets')
-          .upsert({ user_id: user.id, balance: 0, currency: 'USD' }, { onConflict: 'user_id', ignoreDuplicates: true })
+          .upsert({ user_id: user.id, balance: 0, currency: 'USD' }, { onConflict: 'user_id' })
           .select()
           .single()
         w = created
@@ -150,7 +150,7 @@ export default function WalletPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">Wallet</h1>
           <p className="text-xs text-neutral-500 mt-0.5">Pre-paid credits for API keys and platform services</p>

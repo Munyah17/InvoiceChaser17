@@ -310,7 +310,7 @@ export default function ClientAccessPage() {
               No invoices yet — <Link to="/app/invoice-maker" className="text-blue-500 hover:underline">create your first</Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto overscroll-x-contain">
               <table className="w-full text-xs min-w-[400px]">
                 <thead>
                   <tr className="bg-neutral-50 dark:bg-neutral-800/50">

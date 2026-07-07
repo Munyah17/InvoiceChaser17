@@ -213,7 +213,7 @@ export default function Sidebar({ isOpen, onClose }) {
 
       {/* ── ADMIN / SUPER ADMIN NAV ──────────────────────────────────── */}
       {isAdminUser ? (
-        <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5 overflow-y-auto overscroll-y-contain">
           {/* Role badge */}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 mb-1">
             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
@@ -284,7 +284,7 @@ export default function Sidebar({ isOpen, onClose }) {
         </nav>
       ) : (
         /* ── CLIENT NAV ──────────────────────────────────────────────── */
-        <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5 overflow-y-auto">
+        <nav className="flex-1 px-3 py-3 flex flex-col gap-0.5 overflow-y-auto overscroll-y-contain">
           {clientNavItems.map((item) => {
             const isActive = location.pathname === item.path
             return (
