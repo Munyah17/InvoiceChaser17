@@ -38,6 +38,12 @@ const ProfilePage        = lazy(() => import('./pages/ProfilePage'))
 const WalletPage         = lazy(() => import('./pages/WalletPage'))
 const APIKeysPage        = lazy(() => import('./pages/APIKeysPage'))
 
+// QuickBooks Phase 1 - Accounting Features
+const AccountsPage       = lazy(() => import('./pages/AccountsPage'))
+const VendorsPage        = lazy(() => import('./pages/VendorsPage'))
+const ExpensesPage       = lazy(() => import('./pages/ExpensesPage'))
+const BillsPage          = lazy(() => import('./pages/BillsPage'))
+
 function PageLoader() {
   return (
     <div className="flex items-center justify-center min-h-[40vh]">
@@ -123,6 +129,13 @@ function App() {
               <Route path="profile"       element={<ProfilePage />} />
               <Route path="wallet"        element={<WalletPage />} />
               <Route path="api-keys"      element={<APIKeysPage />} />
+
+              {/* QuickBooks Phase 1 - Accounting Routes */}
+              <Route path="accounts"      element={<AccountsPage />} />
+              <Route path="vendors"       element={<VendorsPage />} />
+              <Route path="expenses"      element={<ExpensesPage />} />
+              <Route path="bills"         element={<BillsPage />} />
+
               <Route path="admin"         element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="client-access" element={<AdminRoute><ClientAccessPage /></AdminRoute>} />
             </Route>
