@@ -122,8 +122,8 @@ export default function LandingPage() {
             Trusted by 500+ businesses
           </div>
           <h1 className="font-display font-bold text-4xl sm:text-5xl lg:text-7xl text-neutral-950 dark:text-white mb-6 leading-tight tracking-tight">
-            <span className="whitespace-nowrap">Stop chasing payments.</span><br/>
-            <span className="text-neutral-500 dark:text-neutral-300 whitespace-nowrap">Start getting paid.</span>
+            <span className="sm:whitespace-nowrap">Stop chasing payments.</span><br/>
+            <span className="text-neutral-500 dark:text-neutral-300 sm:whitespace-nowrap">Start getting paid.</span>
           </h1>
           <p className="text-base sm:text-lg lg:text-xl text-neutral-600 dark:text-neutral-300 mb-10 max-w-2xl leading-relaxed mx-auto px-2 sm:px-0">
             Automated payment reminders, smart invoicing, and real-time tracking. Join 500+ businesses that get paid on time, every time.
