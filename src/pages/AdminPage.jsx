@@ -171,6 +171,8 @@ export default function AdminPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [editingUser, setEditingUser] = useState(null)
   const [savingUser, setSavingUser]   = useState(false)
+  const [editModal, setEditModal]     = useState(null)
+  const [editFormData, setEditFormData] = useState({ name: '', full_name: '', email: '' })
 
   const [apiKeys, setApiKeys]             = useState({ oneWay: [], biDir: [] })
   const [newKeyName, setNewKeyName]       = useState('')
@@ -184,6 +186,9 @@ export default function AdminPage() {
   const [escalationText, setEscalationText] = useState('')
   const [demoRequests, setDemoRequests]   = useState([])
   const [demoRequestsLoading, setDemoRequestsLoading] = useState(false)
+  const [rejectModal, setRejectModal]     = useState(null)
+  const [rejectReason, setRejectReason]   = useState('')
+  const [processingDemo, setProcessingDemo] = useState(null)
 
   const [flags, setFlags] = useState(DEFAULT_FLAGS)
 
@@ -276,6 +281,62 @@ export default function AdminPage() {
     alert('User suspended.')
   }
 
+  const openEditModal = (user) => {
+    setEditModal(user.id)
+    setEditFormData({
+      name: user.name || '',
+      full_name: user.full_name || '',
+      email: user.email || '',
+    })
+  }
+
+  const handleSaveUserDetails = async () => {
+    if (!editModal) return
+    setSavingUser(editModal)
+    try {
+      await supabase
+        .from('profiles')
+        .update({
+          name: editFormData.name,
+          full_name: editFormData.full_name,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', editModal)
+      setUsersList(prev => prev.map(u => u.id === editModal ? { ...u, ...editFormData } : u))
+      setEditModal(null)
+    } catch (err) {
+      console.error('Error updating user:', err)
+      alert('Failed to update user')
+    } finally {
+      setSavingUser(null)
+    }
+  }
+
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Delete this user? This action cannot be undone. All user data will be permanently removed.')) return
+    setSavingUser(userId)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
+        body: JSON.stringify({ userId }),
+      })
+      if (!res.ok) {
+        const { error } = await res.json()
+        alert(`Failed to delete user: ${error || 'Unknown error'}`)
+        return
+      }
+      setUsersList(prev => prev.filter(u => u.id !== userId))
+      alert('User deleted.')
+    } catch (err) {
+      console.error('Error deleting user:', err)
+      alert('Failed to delete user')
+    } finally {
+      setSavingUser(null)
+    }
+  }
+
   const toggleFlag = (id) => {
     setFlags(prev => prev.map(f => f.id === id ? { ...f, enabled: !f.enabled } : f))
   }
@@ -300,16 +361,57 @@ export default function AdminPage() {
     if (activeTab === 'demo_requests') fetchDemoRequests()
   }, [activeTab, fetchDemoRequests])
 
-  const handleDemoRequestAction = async (id, action) => {
-    const { data: { session } } = await supabase.auth.getSession()
-    const res = await fetch('/api/admin-demo-requests', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-      body: JSON.stringify({ id, action }),
-    })
-    if (res.ok) {
-      const { request } = await res.json()
-      setDemoRequests(prev => prev.map(r => r.id === id ? request : r))
+  const handleDemoRequestAction = async (id, action, reason = '') => {
+    setProcessingDemo(id)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+
+      if (!session) {
+        alert('Not authenticated')
+        return
+      }
+
+      const res = await fetch('/api/admin-approve-demo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          demoRequestId: id,
+          action,
+          reason: action === 'reject' ? reason : undefined,
+        }),
+      })
+
+      if (!res.ok) {
+        const error = await res.json()
+        alert(`Error: ${error.error}`)
+        return
+      }
+
+      const result = await res.json()
+
+      // Refresh demo requests
+      await fetchDemoRequests()
+      if (action === 'reject') {
+        setRejectModal(null)
+        setRejectReason('')
+      } else if (result.credentials) {
+        alert(
+          `Demo account created — share these credentials with the requester:\n\n` +
+          `Email: ${result.credentials.email}\n` +
+          `Temporary password: ${result.credentials.tempPassword}\n` +
+          `Expires: ${new Date(result.credentials.expiresAt).toLocaleString()}`
+        )
+      } else if (result.accountCreated === false) {
+        alert(result.message || 'Request approved, but the demo account could not be created.')
+      }
+    } catch (err) {
+      console.error('Demo request action error:', err)
+      alert('Failed to process demo request')
+    } finally {
+      setProcessingDemo(null)
     }
   }
 
@@ -754,9 +856,13 @@ export default function AdminPage() {
                             {editingUser === u.id ? (
                               <button onClick={() => setEditingUser(null)} className="text-[10px] text-neutral-500 hover:underline">Cancel</button>
                             ) : (
-                              <button onClick={() => setEditingUser(u.id)} className="text-[10px] text-neutral-700 dark:text-neutral-300 hover:underline">Edit plan</button>
+                              <>
+                                <button onClick={() => setEditingUser(u.id)} className="text-[10px] text-neutral-700 dark:text-neutral-300 hover:underline">Edit plan</button>
+                                <button onClick={() => openEditModal(u)} className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline">Edit</button>
+                              </>
                             )}
-                            <button onClick={() => handleSuspendUser(u.id)} className="text-[10px] text-red-500 hover:underline">Suspend</button>
+                            <button onClick={() => handleSuspendUser(u.id)} className="text-[10px] text-amber-600 dark:text-amber-400 hover:underline">Suspend</button>
+                            <button onClick={() => handleDeleteUser(u.id)} disabled={savingUser === u.id} className="text-[10px] text-red-600 dark:text-red-400 hover:underline disabled:opacity-50">Delete</button>
                           </div>
                         ) : (
                           <span className="text-[9px] text-neutral-400">Protected</span>
@@ -1216,8 +1322,20 @@ export default function AdminPage() {
                   </div>
                   {r.status === 'pending' && (
                     <div className="flex gap-2 flex-shrink-0">
-                      <button onClick={() => handleDemoRequestAction(r.id, 'approve')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 hover:opacity-90">Approve</button>
-                      <button onClick={() => handleDemoRequestAction(r.id, 'decline')} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700">Decline</button>
+                      <button
+                        onClick={() => handleDemoRequestAction(r.id, 'approve')}
+                        disabled={processingDemo === r.id}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-600 dark:bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {processingDemo === r.id ? 'Processing…' : 'Approve'}
+                      </button>
+                      <button
+                        onClick={() => setRejectModal(r.id)}
+                        disabled={processingDemo === r.id}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Reject
+                      </button>
                     </div>
                   )}
                 </div>
@@ -1457,6 +1575,103 @@ export default function AdminPage() {
                   <span className="font-medium text-neutral-900 dark:text-white font-mono text-[10px] text-right max-w-[55%] break-all">{row.value}</span>
                 </div>
               ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── REJECT DEMO MODAL ────────────────────────────────────────────────── */}
+      {rejectModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 max-w-sm w-full shadow-lg">
+            <div className="px-5 py-4 border-b border-neutral-200 dark:border-neutral-800">
+              <h3 className="font-semibold text-neutral-900 dark:text-white">Reject Demo Request</h3>
+              <p className="text-xs text-neutral-500 mt-1">Provide a reason for rejection (optional)</p>
+            </div>
+            <div className="px-5 py-4">
+              <textarea
+                value={rejectReason}
+                onChange={e => setRejectReason(e.target.value)}
+                placeholder="e.g., Business model doesn't match our target market, or needs follow-up information"
+                rows={3}
+                className="w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none focus:border-neutral-400 dark:focus:border-neutral-600 resize-none"
+              />
+            </div>
+            <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-2">
+              <button
+                onClick={() => {
+                  setRejectModal(null)
+                  setRejectReason('')
+                }}
+                className="px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleDemoRequestAction(rejectModal, 'reject', rejectReason)}
+                disabled={processingDemo === rejectModal}
+                className="px-3 py-2 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {processingDemo === rejectModal ? 'Rejecting…' : 'Reject'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── EDIT USER MODAL ────────────────────────────────────────────────── */}
+      {editModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 max-w-sm w-full max-h-[90vh] overflow-auto shadow-lg">
+            <div className="px-5 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between sticky top-0 bg-white dark:bg-neutral-900">
+              <h3 className="font-semibold text-neutral-900 dark:text-white">Edit User</h3>
+              <button onClick={() => setEditModal(null)} className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 text-xl">×</button>
+            </div>
+            <div className="px-5 py-4 space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 uppercase">Email (Read-only)</label>
+                <input
+                  type="email"
+                  value={editFormData.email}
+                  readOnly
+                  className="mt-1 w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-neutral-50 dark:bg-neutral-950 text-neutral-500 cursor-not-allowed"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 uppercase">Name</label>
+                <input
+                  type="text"
+                  value={editFormData.name}
+                  onChange={e => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Username or display name"
+                  className="mt-1 w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-neutral-500 uppercase">Full Name</label>
+                <input
+                  type="text"
+                  value={editFormData.full_name}
+                  onChange={e => setEditFormData(prev => ({ ...prev, full_name: e.target.value }))}
+                  placeholder="First and last name"
+                  className="mt-1 w-full px-3 py-2 text-xs border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white outline-none focus:border-neutral-400 dark:focus:border-neutral-600"
+                />
+              </div>
+            </div>
+            <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setEditModal(null)}
+                className="px-3 py-2 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveUserDetails}
+                disabled={savingUser === editModal}
+                className="px-3 py-2 text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg hover:bg-neutral-800 dark:hover:bg-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {savingUser === editModal ? 'Saving…' : 'Save Changes'}
+              </button>
             </div>
           </div>
         </div>
