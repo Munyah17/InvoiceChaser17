@@ -43,6 +43,7 @@ const AccountsPage       = lazy(() => import('./pages/AccountsPage'))
 const VendorsPage        = lazy(() => import('./pages/VendorsPage'))
 const ExpensesPage       = lazy(() => import('./pages/ExpensesPage'))
 const BillsPage          = lazy(() => import('./pages/BillsPage'))
+const FinancialReportsPage = lazy(() => import('./pages/FinancialReportsPage'))
 
 function PageLoader() {
   return (
@@ -135,6 +136,7 @@ function App() {
               <Route path="vendors"       element={<VendorsPage />} />
               <Route path="expenses"      element={<ExpensesPage />} />
               <Route path="bills"         element={<BillsPage />} />
+              <Route path="reports"       element={<FinancialReportsPage />} />
 
               <Route path="admin"         element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="client-access" element={<AdminRoute><ClientAccessPage /></AdminRoute>} />
