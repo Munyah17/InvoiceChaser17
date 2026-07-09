@@ -44,6 +44,7 @@ const VendorsPage        = lazy(() => import('./pages/VendorsPage'))
 const ExpensesPage       = lazy(() => import('./pages/ExpensesPage'))
 const BillsPage          = lazy(() => import('./pages/BillsPage'))
 const FinancialReportsPage = lazy(() => import('./pages/FinancialReportsPage'))
+const RecurringInvoicesPage = lazy(() => import('./pages/RecurringInvoicesPage'))
 
 function PageLoader() {
   return (
@@ -132,11 +133,12 @@ function App() {
               <Route path="api-keys"      element={<APIKeysPage />} />
 
               {/* QuickBooks Phase 1 - Accounting Routes */}
-              <Route path="accounts"      element={<AccountsPage />} />
-              <Route path="vendors"       element={<VendorsPage />} />
-              <Route path="expenses"      element={<ExpensesPage />} />
-              <Route path="bills"         element={<BillsPage />} />
-              <Route path="reports"       element={<FinancialReportsPage />} />
+              <Route path="accounts"           element={<AccountsPage />} />
+              <Route path="vendors"            element={<VendorsPage />} />
+              <Route path="expenses"           element={<ExpensesPage />} />
+              <Route path="bills"              element={<BillsPage />} />
+              <Route path="reports"            element={<FinancialReportsPage />} />
+              <Route path="recurring-invoices" element={<RecurringInvoicesPage />} />
 
               <Route path="admin"         element={<AdminRoute><AdminPage /></AdminRoute>} />
               <Route path="client-access" element={<AdminRoute><ClientAccessPage /></AdminRoute>} />
