@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
+import { authFetch } from '../lib/authFetch'
 import Button from '../components/Button'
 
 export default function VendorsPage() {
@@ -24,8 +25,7 @@ export default function VendorsPage() {
   const loadVendors = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/vendors', {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      const res = await authFetch('/api/vendors', {
       })
       const { vendors: data } = await res.json()
       setVendors(data || [])
@@ -44,11 +44,10 @@ export default function VendorsPage() {
     }
 
     try {
-      const res = await fetch('/api/vendors', {
+      const res = await authFetch('/api/vendors', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify(formData),
       })

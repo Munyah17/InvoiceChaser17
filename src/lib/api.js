@@ -13,7 +13,13 @@ export const getUserRole = async () => {
     .eq('id', user.id)
     .single()
 
-  if (profileData?.role) return { role: profileData.role, plan: profileData.plan || 'free' }
+  // Only ever trust a recognized role; anything else collapses to 'user' so a
+  // stray/legacy value can never grant elevated access.
+  const KNOWN_ROLES = ['user', 'admin', 'super_admin']
+  if (profileData?.role) {
+    const role = KNOWN_ROLES.includes(profileData.role) ? profileData.role : 'user'
+    return { role, plan: profileData.plan || 'free' }
+  }
 
   const { data: userData } = await supabase
     .from('users')

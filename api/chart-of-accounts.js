@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
-import { verifyAdmin } from './_lib/verify-jwt.js'
+import { verifyUser } from './_lib/verify-jwt.js'
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -15,7 +15,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const auth = await verifyAdmin(req, supabase, supabaseUrl, serviceRoleKey)
+    const auth = await verifyUser(req, supabaseUrl, serviceRoleKey)
     if (auth.error) {
       return res.status(auth.status).json({ error: auth.error })
     }

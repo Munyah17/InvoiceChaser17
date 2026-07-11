@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
+import { authFetch } from '../lib/authFetch'
 import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 import Input from '../components/Input'
@@ -25,8 +26,7 @@ export default function AccountsPage() {
   const loadAccounts = async () => {
     setLoading(true)
     try {
-      const res = await fetch('/api/chart-of-accounts', {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      const res = await authFetch('/api/chart-of-accounts', {
       })
       const { accounts: data } = await res.json()
       setAccounts(data || [])
@@ -45,11 +45,10 @@ export default function AccountsPage() {
     }
 
     try {
-      const res = await fetch('/api/chart-of-accounts', {
+      const res = await authFetch('/api/chart-of-accounts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify(formData),
       })

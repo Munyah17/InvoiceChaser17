@@ -2,6 +2,7 @@ import Stripe from 'stripe'
 import { createClient } from '@supabase/supabase-js'
 import { applyCors } from './_lib/cors.js'
 import { readRawBody } from './_lib/rawBody.js'
+import { activatePlan } from './_lib/activate-plan.js'
 
 // Signature verification needs the exact raw bytes Stripe sent.
 export const config = { api: { bodyParser: false } }
@@ -88,43 +89,20 @@ export default async function handler(req, res) {
     }
 
     const { user_id, plan_id } = session.metadata || {}
-    const customerId = session.customer
-    const subscriptionId = session.subscription
 
     if (supabase && user_id && user_id !== 'guest') {
       try {
-        // Update user profile plan
-        await supabase
-          .from('profiles')
-          .update({ plan: plan_id, updated_at: new Date().toISOString() })
-          .eq('id', user_id)
-
-        // Upsert subscription record
-        await supabase
-          .from('subscriptions')
-          .upsert({
-            user_id: user_id,
-            plan: plan_id,
-            status: 'active',
-            stripe_customer_id: customerId,
-            stripe_subscription_id: subscriptionId,
-            current_period_start: subscriptionId ? new Date().toISOString() : null,
-            current_period_end: subscriptionId
-              ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-              : null,
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' })
-
-        // Record payment
-        const amount = session.amount_total || 0
-        await supabase.from('payments').insert({
-          user_id: user_id,
-          amount: amount / 100,
-          currency: session.currency?.toUpperCase() || 'USD',
+        // Idempotent, shared with the GET /api/create-checkout-session verify
+        // path so a plan is never double-activated regardless of which fires.
+        await activatePlan(supabase, {
+          userId: user_id,
+          planId: plan_id,
           method: 'stripe',
-          status: 'completed',
-          transaction_ref: session.id,
-          metadata: { plan_id, customer_id: customerId, subscription_id: subscriptionId },
+          transactionRef: session.id,
+          amount: session.amount_total || 0,
+          currency: session.currency?.toUpperCase() || 'USD',
+          stripeCustomerId: session.customer,
+          stripeSubscriptionId: session.subscription,
         })
       } catch (dbError) {
         console.error('Database update error:', dbError)

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
-import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 
 export default function PaymentSuccessPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const { setUserPlan } = useStore()
+  const { setUserPlan, loadRole } = useStore()
   const [loading, setLoading] = useState(true)
   const [sessionData, setSessionData] = useState(null)
 
@@ -33,10 +32,10 @@ export default function PaymentSuccessPage() {
         let paid = false
         for (let i = 0; i < 6; i++) {
           try {
-            const pollRes = await fetch('/api/paynow-poll', {
+            const pollRes = await fetch('/api/paynow', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ pollUrl }),
+              body: JSON.stringify({ action: 'poll', pollUrl }),
             })
             const pollData = await pollRes.json()
             if (pollData.paid) { paid = true; break }
@@ -57,14 +56,10 @@ export default function PaymentSuccessPage() {
         sessionStorage.removeItem('paynow_reference')
         sessionStorage.removeItem('paynow_plan_id')
 
-        const { data: { user } } = await supabase.auth.getUser()
-        if (user) {
-          await supabase.from('profiles').update({ plan: planId }).eq('id', user.id)
-          await supabase.from('subscriptions').upsert({
-            user_id: user.id, plan: planId, status: 'active',
-            updated_at: new Date().toISOString(),
-          }, { onConflict: 'user_id' })
-        }
+        // Plan is activated server-side by the poll endpoint (which confirmed
+        // payment with Paynow) — the client can no longer write its own plan.
+        // Refresh the role/plan from the server so the UI reflects it.
+        await loadRole()
         setUserPlan(planId)
         setSessionData({ plan: planId, status: 'paid', method })
         setLoading(false)
@@ -78,8 +73,10 @@ export default function PaymentSuccessPage() {
       }
 
       try {
-        // 1. Verify with our backend
-        const verifyRes = await fetch(`/api/verify-session?session_id=${sessionId}`)
+        // Verifying the session server-side ALSO activates the plan (the
+        // endpoint confirms payment_status with Stripe before writing). The
+        // client can no longer set its own plan, so we just refresh from server.
+        const verifyRes = await fetch(`/api/create-checkout-session?session_id=${sessionId}`)
         const verifyData = await verifyRes.json()
 
         if (verifyData.error) throw new Error(verifyData.error)
@@ -88,18 +85,8 @@ export default function PaymentSuccessPage() {
         const isPaid = verifyData.status === 'paid'
 
         if (isPaid && planId) {
-          // 2. Update user profile in Supabase (frontend fallback in case webhook missed)
-          const { data: { user } } = await supabase.auth.getUser()
-          if (user) {
-            await supabase.from('profiles').update({ plan: planId }).eq('id', user.id)
-            await supabase.from('subscriptions').upsert({
-              user_id: user.id,
-              plan: planId,
-              status: 'active',
-              updated_at: new Date().toISOString(),
-            }, { onConflict: 'user_id' })
-            setUserPlan(planId)
-          }
+          await loadRole()
+          setUserPlan(planId)
         }
 
         setSessionData({
@@ -116,7 +103,7 @@ export default function PaymentSuccessPage() {
     }
 
     processPayment()
-  }, [searchParams, navigate, setUserPlan, method])
+  }, [searchParams, navigate, setUserPlan, loadRole, method])
 
   if (loading) {
     return (
