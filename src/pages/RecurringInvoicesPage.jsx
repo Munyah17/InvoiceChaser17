@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
+import { authFetch } from '../lib/authFetch'
+import { supabase } from '../lib/supabase'
 import Button from '../components/Button'
 import { formatDate } from '../utils/dateFormat'
 
@@ -26,8 +28,7 @@ export default function RecurringInvoicesPage() {
 
   const loadRecurring = async () => {
     try {
-      const res = await fetch('/api/recurring-invoices', {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      const res = await authFetch('/api/recurring-invoices', {
       })
       const { recurringInvoices: data } = await res.json()
       setRecurring(data || [])
@@ -40,10 +41,13 @@ export default function RecurringInvoicesPage() {
 
   const loadCustomers = async () => {
     try {
-      const res = await fetch('/api/customers', {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      })
-      const { customers: data } = await res.json()
+      // Customers are RLS-scoped to the signed-in user, so read them directly.
+      const { data, error } = await supabase
+        .from('customers')
+        .select('id, name, email')
+        .eq('user_id', user.id)
+        .order('name')
+      if (error) throw error
       setCustomers(data || [])
     } catch (err) {
       console.error('Load customers error:', err)
@@ -58,11 +62,10 @@ export default function RecurringInvoicesPage() {
     }
 
     try {
-      const res = await fetch('/api/recurring-invoices', {
+      const res = await authFetch('/api/recurring-invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify(formData),
       })
@@ -91,11 +94,10 @@ export default function RecurringInvoicesPage() {
 
   const handleToggleStatus = async (id, newStatus) => {
     try {
-      const res = await fetch('/api/recurring-invoices', {
+      const res = await authFetch('/api/recurring-invoices', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify({ id, status: newStatus }),
       })

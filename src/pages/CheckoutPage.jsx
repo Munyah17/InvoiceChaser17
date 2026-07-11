@@ -81,10 +81,11 @@ export default function CheckoutPage() {
     const reference = `IC-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
     const amountDollars = (plan.monthly || plan.oneTime) / 100
 
-    const response = await fetch('/api/paynow-pay', {
+    const response = await fetch('/api/paynow', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
+        action: 'pay',
         amount: amountDollars,
         description: plan.name,
         reference,

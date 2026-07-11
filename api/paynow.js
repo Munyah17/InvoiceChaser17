@@ -1,6 +1,7 @@
 import { Paynow } from 'paynow'
 import { createClient } from '@supabase/supabase-js'
 import { handlePreflight, applyCors } from './_lib/cors.js'
+import { activatePlan } from './_lib/activate-plan.js'
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -86,9 +87,41 @@ export default async function handler(req, res) {
 
       const paynow = new Paynow(integrationId, integrationKey)
       const status = await paynow.pollTransaction(pollUrl)
+      const isPaid = status.paid()
+
+      // Activate the plan here the moment payment is confirmed. The client can
+      // no longer set its own plan (RLS), and Paynow's async result callback
+      // can be delayed, so this poll — driven by the success page — is the
+      // reliable activation point. Idempotent via activatePlan().
+      if (isPaid && supabase) {
+        const { data: pmt } = await supabase
+          .from('payments')
+          .select('id, user_id, status, metadata')
+          .filter('metadata->>paynow_poll_url', 'eq', pollUrl)
+          .maybeSingle()
+
+        if (pmt && pmt.status !== 'completed') {
+          await supabase.from('payments').update({ status: 'completed' }).eq('id', pmt.id)
+
+          if (pmt.metadata?.type === 'invoice_payment' && pmt.metadata?.invoice_id) {
+            await supabase.from('invoices')
+              .update({ status: 'paid', updated_at: new Date().toISOString() })
+              .eq('id', pmt.metadata.invoice_id)
+          } else if (pmt.metadata?.plan_id && pmt.user_id) {
+            await activatePlan(supabase, {
+              userId: pmt.user_id,
+              planId: pmt.metadata.plan_id,
+              method: 'paynow',
+              transactionRef: `${pmt.id}-activated`,
+              amount: parseFloat(status.amount) || 0,
+              currency: 'USD',
+            })
+          }
+        }
+      }
 
       return res.status(200).json({
-        paid: status.paid(),
+        paid: isPaid,
         status: status.status,
         amount: status.amount,
         reference: status.reference,
@@ -107,7 +140,7 @@ export default async function handler(req, res) {
 
         const { data: existing } = await supabase
           .from('payments')
-          .select('id, metadata')
+          .select('id, user_id, metadata')
           .eq('transaction_ref', reference)
           .single()
 
@@ -142,6 +175,18 @@ export default async function handler(req, res) {
             type: 'debit',
             description: `Collection fee (10%) — Invoice ${invoice?.invoice_number} paid via reminder link`,
             reference,
+          })
+        } else if (newStatus === 'completed' && existing?.metadata?.plan_id && existing?.user_id) {
+          // Subscription/plan purchase via Paynow — activate server-side.
+          // (Previously the plan was only ever set client-side, which is no
+          //  longer permitted by RLS, so this is now the authoritative path.)
+          await activatePlan(supabase, {
+            userId: existing.user_id,
+            planId: existing.metadata.plan_id,
+            method: 'paynow',
+            transactionRef: `${reference}-activated`,
+            amount: parseFloat(amount) || 0,
+            currency: 'USD',
           })
         }
       }

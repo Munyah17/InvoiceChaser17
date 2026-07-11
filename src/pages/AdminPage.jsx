@@ -1,8 +1,19 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { authFetch } from '../lib/authFetch'
 import { useStore } from '../store/useStore'
 import { formatDate } from '../utils/dateFormat'
+
+// All privileged mutations (role/plan/details/suspend/delete/demo) run through
+// the service-role-backed /api/admin endpoint. Clients can no longer write
+// these fields directly — RLS column grants block it — so this is the ONLY path.
+async function adminAction(body) {
+  const res = await authFetch('/api/admin', { method: 'POST', body: JSON.stringify(body) })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
 
 // Tabs — super_admin sees everything; admin sees business ops (no platform config / feature flags / roles)
 const SUPER_TABS = [
@@ -269,16 +280,25 @@ export default function AdminPage() {
 
   const handleUpdateUserPlan = async (userId, newPlan) => {
     setSavingUser(userId)
-    await supabase.from('profiles').update({ plan: newPlan, updated_at: new Date().toISOString() }).eq('id', userId)
-    setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan: newPlan } : u))
-    setSavingUser(null)
-    setEditingUser(null)
+    try {
+      await adminAction({ action: 'update-plan', userId, newPlan })
+      setUsersList(prev => prev.map(u => u.id === userId ? { ...u, plan: newPlan } : u))
+    } catch (err) {
+      alert(`Failed to update plan: ${err.message}`)
+    } finally {
+      setSavingUser(null)
+      setEditingUser(null)
+    }
   }
 
   const handleSuspendUser = async (userId) => {
     if (!confirm('Suspend this user? They will not be able to log in.')) return
-    await supabase.auth.admin.updateUserById(userId, { ban_duration: '876000h' }).catch(() => {})
-    alert('User suspended.')
+    try {
+      await adminAction({ action: 'suspend-user', userId })
+      alert('User suspended.')
+    } catch (err) {
+      alert(`Failed to suspend: ${err.message}`)
+    }
   }
 
   const openEditModal = (user) => {
@@ -294,19 +314,16 @@ export default function AdminPage() {
     if (!editModal) return
     setSavingUser(editModal)
     try {
-      await supabase
-        .from('profiles')
-        .update({
-          name: editFormData.name,
-          full_name: editFormData.full_name,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', editModal)
+      await adminAction({
+        action: 'update-details',
+        userId: editModal,
+        details: { name: editFormData.name, full_name: editFormData.full_name },
+      })
       setUsersList(prev => prev.map(u => u.id === editModal ? { ...u, ...editFormData } : u))
       setEditModal(null)
     } catch (err) {
       console.error('Error updating user:', err)
-      alert('Failed to update user')
+      alert(`Failed to update user: ${err.message}`)
     } finally {
       setSavingUser(null)
     }
@@ -316,22 +333,12 @@ export default function AdminPage() {
     if (!confirm('Delete this user? This action cannot be undone. All user data will be permanently removed.')) return
     setSavingUser(userId)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin-delete-user', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session?.access_token}` },
-        body: JSON.stringify({ userId }),
-      })
-      if (!res.ok) {
-        const { error } = await res.json()
-        alert(`Failed to delete user: ${error || 'Unknown error'}`)
-        return
-      }
+      await adminAction({ action: 'delete-user', userId })
       setUsersList(prev => prev.filter(u => u.id !== userId))
       alert('User deleted.')
     } catch (err) {
       console.error('Error deleting user:', err)
-      alert('Failed to delete user')
+      alert(`Failed to delete user: ${err.message}`)
     } finally {
       setSavingUser(null)
     }
@@ -344,10 +351,7 @@ export default function AdminPage() {
   const fetchDemoRequests = useCallback(async () => {
     setDemoRequestsLoading(true)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch('/api/admin-demo-requests', {
-        headers: { Authorization: `Bearer ${session?.access_token}` },
-      })
+      const res = await authFetch('/api/admin')
       const data = await res.json()
       if (res.ok) setDemoRequests(data.requests || [])
     } catch (err) {
@@ -364,33 +368,13 @@ export default function AdminPage() {
   const handleDemoRequestAction = async (id, action, reason = '') => {
     setProcessingDemo(id)
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-
-      if (!session) {
-        alert('Not authenticated')
-        return
-      }
-
-      const res = await fetch('/api/admin-approve-demo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({
-          demoRequestId: id,
-          action,
-          reason: action === 'reject' ? reason : undefined,
-        }),
+      // Frontend uses 'approve'/'reject'; the API uses 'approve-demo'/'reject-demo'.
+      const apiAction = action === 'reject' ? 'reject-demo' : 'approve-demo'
+      const result = await adminAction({
+        demoRequestId: id,
+        action: apiAction,
+        reason: action === 'reject' ? reason : undefined,
       })
-
-      if (!res.ok) {
-        const error = await res.json()
-        alert(`Error: ${error.error}`)
-        return
-      }
-
-      const result = await res.json()
 
       // Refresh demo requests
       await fetchDemoRequests()
@@ -1114,8 +1098,9 @@ export default function AdminPage() {
                   setSavingStaff(true)
                   setStaffMsg(null)
                   try {
-                    // In production this calls a server-side Edge Function that uses service role to create the user
-                    // Here we update the profiles table role for an existing user by email
+                    // Look up the existing account (admins may read all profiles),
+                    // then promote via the service-role /api/admin endpoint —
+                    // role changes are super_admin-only and blocked client-side.
                     const { data: existing } = await supabase
                       .from('profiles')
                       .select('id')
@@ -1124,15 +1109,15 @@ export default function AdminPage() {
                     if (!existing) {
                       setStaffMsg({ type: 'error', text: 'No account found with that email. Ask them to register first.' })
                     } else {
-                      await supabase
-                        .from('profiles')
-                        .update({ role: newStaff.role, full_name: newStaff.name || undefined, updated_at: new Date().toISOString() })
-                        .eq('id', existing.id)
+                      if (newStaff.name) {
+                        await adminAction({ action: 'update-details', userId: existing.id, details: { full_name: newStaff.name } })
+                      }
+                      await adminAction({ action: 'update-role', userId: existing.id, newRole: newStaff.role })
                       setStaffMsg({ type: 'success', text: `${newStaff.email} promoted to ${newStaff.role}.` })
                       setNewStaff({ email: '', name: '', role: 'admin' })
                       fetchAll()
                     }
-                  } catch { setStaffMsg({ type: 'error', text: 'Something went wrong.' }) }
+                  } catch (err) { setStaffMsg({ type: 'error', text: err.message || 'Something went wrong.' }) }
                   finally { setSavingStaff(false) }
                 }}
                 className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -1181,8 +1166,10 @@ export default function AdminPage() {
                             {s.role === 'admin' && (
                               <button
                                 onClick={async () => {
-                                  await supabase.from('profiles').update({ role: 'super_admin' }).eq('id', s.id)
-                                  setStaffList(prev => prev.map(x => x.id === s.id ? { ...x, role: 'super_admin' } : x))
+                                  try {
+                                    await adminAction({ action: 'update-role', userId: s.id, newRole: 'super_admin' })
+                                    setStaffList(prev => prev.map(x => x.id === s.id ? { ...x, role: 'super_admin' } : x))
+                                  } catch (err) { alert(`Failed: ${err.message}`) }
                                 }}
                                 className="text-[10px] text-neutral-600 dark:text-neutral-300 hover:underline"
                               >
@@ -1192,8 +1179,10 @@ export default function AdminPage() {
                             <button
                               onClick={async () => {
                                 if (!confirm(`Demote ${s.email} to client? They will lose all staff access.`)) return
-                                await supabase.from('profiles').update({ role: 'user' }).eq('id', s.id)
-                                fetchAll()
+                                try {
+                                  await adminAction({ action: 'update-role', userId: s.id, newRole: 'user' })
+                                  fetchAll()
+                                } catch (err) { alert(`Failed: ${err.message}`) }
                               }}
                               className="text-[10px] text-red-500 hover:underline"
                             >

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
+import { authFetch } from '../lib/authFetch'
 import Button from '../components/Button'
 import { formatDate } from '../utils/dateFormat'
 
@@ -26,8 +27,7 @@ export default function BillsPage() {
 
   const loadBills = async () => {
     try {
-      const res = await fetch('/api/bills', {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      const res = await authFetch('/api/bills', {
       })
       const { bills: data } = await res.json()
       setBills(data || [])
@@ -40,8 +40,7 @@ export default function BillsPage() {
 
   const loadVendors = async () => {
     try {
-      const res = await fetch('/api/vendors', {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      const res = await authFetch('/api/vendors', {
       })
       const { vendors: data } = await res.json()
       setVendors(data || [])
@@ -58,11 +57,10 @@ export default function BillsPage() {
     }
 
     try {
-      const res = await fetch('/api/bills', {
+      const res = await authFetch('/api/bills', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${user?.token}`,
         },
         body: JSON.stringify(formData),
       })

@@ -290,8 +290,25 @@ const SIZE_PATTERNS = {
  * @returns {string} - Project type key
  */
 const detectProjectType = (description) => {
-  const desc = description.toLowerCase()
-  
+  const desc = (description || '').toLowerCase()
+
+  // Word-boundary matching (so "warehouse" no longer matches the "house"
+  // keyword and collapses every project to a cottage). Score each type by how
+  // many of its keywords appear as whole words and pick the strongest match —
+  // more specific building types therefore win over the generic fallback.
+  let best = null
+  let bestScore = 0
+  for (const [type, keywords] of Object.entries(PROJECT_PATTERNS)) {
+    let score = 0
+    for (const keyword of keywords) {
+      const re = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i')
+      if (re.test(desc)) score++
+    }
+    if (score > bestScore) { bestScore = score; best = type }
+  }
+  if (best) return best
+
+  // Legacy substring fallback (kept for partial-word inputs like "3-roomed")
   for (const [type, keywords] of Object.entries(PROJECT_PATTERNS)) {
     for (const keyword of keywords) {
       if (desc.includes(keyword)) {
@@ -308,31 +325,46 @@ const detectProjectType = (description) => {
  * @param {string} description - User description
  * @returns {Object} - Size details
  */
-const detectSize = (description) => {
-  const desc = description.toLowerCase()
-  
-  // Check for room count
-  const roomMatch = desc.match(SIZE_PATTERNS.rooms)
-  if (roomMatch) {
-    return { type: 'rooms', count: parseInt(roomMatch[1]) }
+// Sensible default footprint per project type, so a description without an
+// explicit number doesn't collapse every project to a single 1-room cottage.
+const DEFAULT_SIZE = {
+  cottage:          { type: 'rooms', count: 3 },
+  office:           { type: 'rooms', count: 6 },
+  warehouse:        { type: 'sqm',   count: 300 },
+  school_classroom: { type: 'rooms', count: 4 },
+  bathroom:         { type: 'rooms', count: 1 },
+  kitchen:          { type: 'rooms', count: 1 },
+}
+
+const detectSize = (description, projectType = 'cottage') => {
+  const desc = (description || '').toLowerCase()
+
+  // Dimensions first (e.g., "10 x 15 m") — most explicit
+  const sizeMatch = desc.match(SIZE_PATTERNS.size)
+  if (sizeMatch) {
+    return { type: 'sqm', count: parseInt(sizeMatch[1]) * parseInt(sizeMatch[2]) }
   }
-  
-  // Check for square meters
+
+  // Explicit square-meterage
   const sqmMatch = desc.match(SIZE_PATTERNS.sqm)
   if (sqmMatch) {
     return { type: 'sqm', count: parseInt(sqmMatch[1]) }
   }
-  
-  // Check for dimensions (e.g., "10 x 15 m")
-  const sizeMatch = desc.match(SIZE_PATTERNS.size)
-  if (sizeMatch) {
-    const width = parseInt(sizeMatch[1])
-    const length = parseInt(sizeMatch[2])
-    return { type: 'sqm', count: width * length }
+
+  // Room/bedroom count
+  const roomMatch = desc.match(SIZE_PATTERNS.rooms)
+  if (roomMatch) {
+    return { type: 'rooms', count: parseInt(roomMatch[1]) }
   }
-  
-  // Default sizes
-  return { type: 'rooms', count: 1 }
+
+  // A bare leading number ("5 unit clinic", "double garage") → treat as rooms
+  const bareNum = desc.match(/\b(\d{1,3})\b/)
+  if (bareNum) {
+    return { type: 'rooms', count: parseInt(bareNum[1]) }
+  }
+
+  // No number at all — use a realistic default for the detected project type
+  return DEFAULT_SIZE[projectType] || { type: 'rooms', count: 1 }
 }
 
 /**
@@ -342,7 +374,7 @@ const detectSize = (description) => {
  */
 export const generateSmartBOQ = (description) => {
   const projectType = detectProjectType(description)
-  const size = detectSize(description)
+  const size = detectSize(description, projectType)
   const template = PROJECT_TEMPLATES[projectType]
   
   if (!template) {
@@ -446,33 +478,35 @@ export const generateSmartBOQ = (description) => {
 export const assignBestShops = (items, location = 'Harare') => {
   return items.map(item => {
     if (item.type === 'labor') return item
-    
+
     let bestShop = null
     let bestPrice = item.price
-    let bestDelivery = Infinity
-    
-    // Find all shops that have this item
-    for (const [shopKey, shop] of Object.entries(HARDWARE_STORES)) {
-      if (shop.prices[item.id]) {
-        const price = shop.prices[item.id]
-        const deliversToLocation = shop.locations.includes(location)
-        
-        // Score: lower price is better, delivery available is bonus
-        let score = price
-        if (!deliversToLocation) score += 10 // Penalty for no delivery
-        
-        if (!bestShop || score < bestPrice) {
-          bestShop = shop.name
-          bestPrice = price
-          bestDelivery = deliversToLocation ? 0 : 1
-        }
+    let bestScore = Infinity
+
+    // Find the cheapest shop that actually stocks this item, preferring shops
+    // that deliver to the user's location.
+    for (const shop of Object.values(HARDWARE_STORES)) {
+      const price = shop.prices[item.id]
+      if (price == null) continue
+
+      const deliversToLocation = shop.locations.includes(location)
+      const score = price + (deliversToLocation ? 0 : 10) // penalty compared like-for-like
+
+      if (score < bestScore) {
+        bestScore = score
+        bestShop = shop.name
+        bestPrice = price
       }
     }
-    
+
     return {
       ...item,
       price: bestPrice,
-      shop: bestShop || 'Other',
+      // If no listed store stocks this item, fall back to the suggested price
+      // and label it clearly rather than pinning it on a real shop that
+      // doesn't sell it.
+      shop: bestShop || 'Market avg (no listed supplier)',
+      inStock: !!bestShop,
     }
   })
 }
@@ -510,8 +544,10 @@ export const getShopRecommendations = (items, location = 'Harare') => {
   const shopTotals = {}
   
   items.forEach(item => {
-    if (item.type === 'labor' || !item.shop) return
-    
+    // Skip labor and any material no listed supplier actually stocks, so the
+    // shop breakdown only ever lists real shops that carry the assigned items.
+    if (item.type === 'labor' || !item.shop || item.inStock === false) return
+
     if (!shopTotals[item.shop]) {
       shopTotals[item.shop] = {
         shop: item.shop,
@@ -552,11 +588,12 @@ export const generateCompleteBOQ = (description, location = 'Harare') => {
   const itemsWithShops = assignBestShops(items, location)
   const shopRecommendations = getShopRecommendations(itemsWithShops, location)
   
+  const projectType = detectProjectType(description)
   return {
     items: itemsWithShops,
     shopRecommendations,
-    projectType: detectProjectType(description),
-    size: detectSize(description),
+    projectType,
+    size: detectSize(description, projectType),
   }
 }
 

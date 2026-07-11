@@ -34,7 +34,87 @@ export default async function handler(req, res) {
 
     // HANDLE: POST /api/admin
     if (req.method === 'POST') {
-      const { userId, action, demoRequestId, reason, retry } = req.body
+      const { userId, action, demoRequestId, reason, retry, newRole, newPlan, details } = req.body
+
+      const VALID_ROLES = ['user', 'admin', 'super_admin']
+      const VALID_PLANS = ['free', 'starter', 'professional', 'business', 'lifetime', 'enterprise']
+
+      // Load target once for any user-management action so we can enforce
+      // protection rules server-side (never trust the client).
+      const loadTarget = async () => {
+        const { data } = await supabase
+          .from('profiles')
+          .select('id, role, is_protected')
+          .eq('id', userId)
+          .single()
+        return data
+      }
+
+      // USER: Change role — super_admin only
+      if (action === 'update-role') {
+        if (auth.role !== 'super_admin') {
+          return res.status(403).json({ error: 'Only a super admin can change roles' })
+        }
+        if (!userId || !VALID_ROLES.includes(newRole)) {
+          return res.status(400).json({ error: 'Invalid userId or role' })
+        }
+        if (userId === auth.user.id) {
+          return res.status(400).json({ error: 'You cannot change your own role' })
+        }
+        const target = await loadTarget()
+        if (!target) return res.status(404).json({ error: 'User not found' })
+        if (target.is_protected) {
+          return res.status(403).json({ error: 'This account is protected' })
+        }
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: newRole, updated_at: new Date().toISOString() })
+          .eq('id', userId)
+        if (error) return res.status(400).json({ error: 'Failed to update role' })
+        return res.status(200).json({ success: true, role: newRole })
+      }
+
+      // USER: Change plan — admin + super_admin
+      if (action === 'update-plan') {
+        if (!userId || !VALID_PLANS.includes(newPlan)) {
+          return res.status(400).json({ error: 'Invalid userId or plan' })
+        }
+        const { error } = await supabase
+          .from('profiles')
+          .update({ plan: newPlan, updated_at: new Date().toISOString() })
+          .eq('id', userId)
+        if (error) return res.status(400).json({ error: 'Failed to update plan' })
+        return res.status(200).json({ success: true, plan: newPlan })
+      }
+
+      // USER: Edit display details — admin + super_admin
+      if (action === 'update-details') {
+        if (!userId || !details) {
+          return res.status(400).json({ error: 'Missing userId or details' })
+        }
+        const patch = { updated_at: new Date().toISOString() }
+        if (typeof details.name === 'string') patch.name = details.name
+        if (typeof details.full_name === 'string') patch.full_name = details.full_name
+        const { error } = await supabase.from('profiles').update(patch).eq('id', userId)
+        if (error) return res.status(400).json({ error: 'Failed to update details' })
+        return res.status(200).json({ success: true })
+      }
+
+      // USER: Suspend (ban) — admin + super_admin
+      if (action === 'suspend-user') {
+        if (!userId) return res.status(400).json({ error: 'Missing userId' })
+        if (userId === auth.user.id) {
+          return res.status(400).json({ error: 'You cannot suspend your own account' })
+        }
+        const target = await loadTarget()
+        if (!target) return res.status(404).json({ error: 'User not found' })
+        if (target.is_protected || target.role === 'super_admin') {
+          return res.status(403).json({ error: 'This account is protected' })
+        }
+        const { error } = await supabase.auth.admin.updateUserById(userId, { ban_duration: '876000h' })
+        if (error) return res.status(400).json({ error: 'Failed to suspend user' })
+        return res.status(200).json({ success: true, message: 'User suspended' })
+      }
 
       // DEMO: Retry account creation
       if (retry && demoRequestId) {

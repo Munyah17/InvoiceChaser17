@@ -17,7 +17,7 @@ export default function PayInvoicePage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await fetch(`/api/get-invoice?invoice_number=${encodeURIComponent(invoiceNumber)}`)
+        const res = await fetch(`/api/invoices?invoice_number=${encodeURIComponent(invoiceNumber)}`)
         const data = await res.json()
         if (!res.ok) throw new Error(data.error || 'Invoice not found')
         setInvoice(data)
@@ -42,7 +42,7 @@ export default function PayInvoicePage() {
   const handlePay = async (gateway) => {
     setPayingWith(gateway)
     try {
-      const res = await fetch('/api/pay-invoice', {
+      const res = await fetch('/api/invoices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ invoice_number: invoiceNumber, gateway }),
