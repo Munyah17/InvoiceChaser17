@@ -141,6 +141,116 @@ export const SUPPLIERS = {
     categories: ['Roofing'],
     priceFactor: 0.95, deliveryFee: 30, minOrder: 150,
   },
+
+  // ── More general hardware / building retailers ────────────────────────────
+  'Mica Hardware': {
+    name: 'Mica Hardware', type: 'Hardware & paint retailer',
+    locations: ['Harare', 'Bulawayo'],
+    categories: [...BUILDING, 'Electrical'],
+    priceFactor: 1.01, deliveryFee: 22, minOrder: 80,
+  },
+  'Gaths Hardware': {
+    name: 'Gaths Hardware', type: 'Building & hardware',
+    locations: ['Harare', 'Masvingo'],
+    categories: BUILDING,
+    priceFactor: 1.00, deliveryFee: 24, minOrder: 90,
+  },
+  'Complete Hardware': {
+    name: 'Complete Hardware', type: 'Hardware & tools',
+    locations: ['Harare', 'Chitungwiza'],
+    categories: [...BUILDING, 'Electrical'],
+    priceFactor: 0.99, deliveryFee: 20, minOrder: 70,
+  },
+
+  // ── Cement & concrete manufacturers / brick makers ────────────────────────
+  'PPC Zimbabwe': {
+    name: 'PPC Zimbabwe', type: 'Cement manufacturer',
+    locations: ['Harare', 'Bulawayo', 'Gweru', 'Mutare', 'Masvingo'],
+    categories: ['Cement & Concrete'],
+    priceFactor: 0.90, deliveryFee: 45, minOrder: 300,
+  },
+  'Khaya Cement': {
+    name: 'Khaya Cement', type: 'Cement manufacturer',
+    locations: ['Harare', 'Bulawayo', 'Gweru'],
+    categories: ['Cement & Concrete'],
+    priceFactor: 0.91, deliveryFee: 45, minOrder: 300,
+  },
+  'Sino Zimbabwe Cement': {
+    name: 'Sino Zimbabwe Cement', type: 'Cement manufacturer',
+    locations: ['Harare', 'Gweru'],
+    categories: ['Cement & Concrete'],
+    priceFactor: 0.92, deliveryFee: 45, minOrder: 300,
+  },
+  'Willdale': {
+    name: 'Willdale', type: 'Brick & clay products manufacturer',
+    locations: ['Harare'],
+    categories: ['Cement & Concrete'],
+    priceFactor: 0.95, deliveryFee: 50, minOrder: 250,
+  },
+
+  // ── Roofing / building products manufacturers ─────────────────────────────
+  'Turnall Holdings': {
+    name: 'Turnall Holdings', type: 'Roofing & pipe manufacturer',
+    locations: ['Harare', 'Bulawayo'],
+    categories: ['Roofing', 'Plumbing'],
+    priceFactor: 0.93, deliveryFee: 40, minOrder: 200,
+  },
+  'Zimtile': {
+    name: 'Zimtile', type: 'Concrete roof-tile manufacturer',
+    locations: ['Harare'],
+    categories: ['Roofing'],
+    priceFactor: 0.94, deliveryFee: 40, minOrder: 200,
+  },
+
+  // ── Plumbing / plastics ───────────────────────────────────────────────────
+  'Proplastics': {
+    name: 'Proplastics', type: 'PVC pipe & fittings manufacturer',
+    locations: ['Harare', 'Bulawayo'],
+    categories: ['Plumbing'],
+    priceFactor: 0.90, deliveryFee: 35, minOrder: 150,
+  },
+
+  // ── Timber ────────────────────────────────────────────────────────────────
+  'Allied Timbers': {
+    name: 'Allied Timbers', type: 'Timber producer',
+    locations: ['Harare', 'Mutare', 'Bulawayo'],
+    categories: ['Wood & Timber'],
+    priceFactor: 0.93, deliveryFee: 35, minOrder: 150,
+  },
+
+  // ── Steel (additional) ────────────────────────────────────────────────────
+  'Steelmakers Zimbabwe': {
+    name: 'Steelmakers Zimbabwe', type: 'Steel manufacturer',
+    locations: ['Redcliff', 'Harare', 'Bulawayo'],
+    categories: ['Steel & Metal'],
+    priceFactor: 0.92, deliveryFee: 50, minOrder: 300,
+  },
+  'Tregers Group': {
+    name: 'Tregers Group', type: 'Steel & metal products',
+    locations: ['Harare', 'Bulawayo'],
+    categories: ['Steel & Metal'],
+    priceFactor: 0.96, deliveryFee: 45, minOrder: 250,
+  },
+
+  // ── Electrical / electronics / solar ──────────────────────────────────────
+  'Electro Zimbabwe': {
+    name: 'Electro Zimbabwe', type: 'Electrical products & services',
+    locations: ['Harare', 'Bulawayo'],
+    categories: ['Electrical'],
+    priceFactor: 0.97, deliveryFee: 20, minOrder: 70,
+  },
+  'Sona Solar Zimbabwe': {
+    name: 'Sona Solar Zimbabwe', type: 'Solar & electrical distributor',
+    locations: ['Harare', 'Bulawayo', 'Mutare'],
+    categories: ['Electrical'],
+    priceFactor: 1.00, deliveryFee: 20, minOrder: 60,
+  },
+  'Solar Experts Zimbabwe': {
+    name: 'Solar Experts Zimbabwe', type: 'Solar systems supplier',
+    locations: ['Harare'],
+    categories: ['Electrical'],
+    priceFactor: 1.02, deliveryFee: 22, minOrder: 60,
+  },
 }
 
 // Back-compat alias (older imports referenced HARDWARE_STORES)
