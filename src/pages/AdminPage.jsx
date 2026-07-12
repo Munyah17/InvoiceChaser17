@@ -936,7 +936,7 @@ export default function AdminPage() {
       )}
 
       {/* ── FEATURE FLAGS ────────────────────────────────────────────────── */}
-      {activeTab === 'flags' && (
+      {activeTab === 'flags' && userRole === 'super_admin' && (
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1451,7 +1451,7 @@ export default function AdminPage() {
       )}
 
       {/* ── PLATFORM ─────────────────────────────────────────────────────── */}
-      {activeTab === 'platform' && (
+      {activeTab === 'platform' && userRole === 'super_admin' && (
         <div className="space-y-5">
           {/* Lifetime access card */}
           <div className="bg-neutral-900 dark:bg-white border border-neutral-900 dark:border-white rounded-xl p-5">
