@@ -45,6 +45,7 @@ const ExpensesPage       = lazy(() => import('./pages/ExpensesPage'))
 const BillsPage          = lazy(() => import('./pages/BillsPage'))
 const FinancialReportsPage = lazy(() => import('./pages/FinancialReportsPage'))
 const RecurringInvoicesPage = lazy(() => import('./pages/RecurringInvoicesPage'))
+const DebtorsCreditorsPage = lazy(() => import('./pages/DebtorsCreditorsPage'))
 
 function PageLoader() {
   return (
@@ -139,6 +140,7 @@ function App() {
               <Route path="bills"              element={<BillsPage />} />
               <Route path="reports"            element={<FinancialReportsPage />} />
               <Route path="recurring-invoices" element={<RecurringInvoicesPage />} />
+              <Route path="debtors-creditors"  element={<DebtorsCreditorsPage />} />
 
               {/* Staff console (business ops) — admin + super_admin */}
               <Route path="admin"         element={<AdminRoute><AdminPage mode="admin" /></AdminRoute>} />

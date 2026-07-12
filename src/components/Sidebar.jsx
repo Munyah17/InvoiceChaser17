@@ -23,6 +23,7 @@ export default function Sidebar({ isOpen, onClose }) {
     { path: '/app/debit-note',   label: 'Debit Note',    icon: 'minus-circle' },
     { path: '/app/credit-note',  label: 'Credit Note',   icon: 'plus-circle' },
     { path: '/app/reminders',    label: 'Reminders',     icon: 'bell' },
+    { path: '/app/debtors-creditors', label: 'Debtors & Creditors', icon: 'analytics' },
     { path: '/app/boq',          label: 'BOQ',           icon: 'calculator' },
     { path: '/app/bom',          label: 'BOM',           icon: 'layers' },
     { path: '/app/wallet',       label: 'Wallet',        icon: 'wallet' },
