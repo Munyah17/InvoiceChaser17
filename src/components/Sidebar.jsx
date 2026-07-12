@@ -34,21 +34,23 @@ export default function Sidebar({ isOpen, onClose }) {
   ]
 
   // ── Admin / Super Admin management navigation ────────────────────────────
-  const adminNavItems = [
-    { tab: 'overview',     label: 'Overview',         icon: 'grid' },
-    { tab: 'users',        label: 'Users & Clients',  icon: 'users' },
-    { tab: 'subscribers',  label: 'Subscriptions',    icon: 'crown' },
-    { tab: 'analytics',    label: 'Analytics',        icon: 'analytics' },
-    { tab: 'api_keys',     label: 'API Key Oversight',icon: 'api-key' },
-    ...(userRole === 'admin' ? [
-      { tab: 'support', label: 'Support', icon: 'bell' },
-    ] : []),
-    ...(userRole === 'super_admin' ? [
-      { tab: 'staff',    label: 'Staff Management',  icon: 'user' },
-      { tab: 'flags',    label: 'Feature Flags',     icon: 'flag' },
-      { tab: 'roles',    label: 'Role Matrix',       icon: 'shield' },
-      { tab: 'platform', label: 'Platform Config',   icon: 'settings' },
-    ] : []),
+  // Staff console (business ops) — /app/admin. Both admin and super_admin.
+  const staffNavItems = [
+    { tab: 'overview',     label: 'Overview',          icon: 'grid' },
+    { tab: 'users',        label: 'Users & Clients',   icon: 'users' },
+    { tab: 'subscribers',  label: 'Subscriptions',     icon: 'crown' },
+    { tab: 'analytics',    label: 'Analytics',         icon: 'analytics' },
+    { tab: 'api_keys',     label: 'API Key Oversight', icon: 'api-key' },
+    { tab: 'support',      label: 'Support',           icon: 'bell' },
+  ]
+
+  // Platform console — /app/console. super_admin only.
+  const platformNavItems = [
+    { tab: 'overview', label: 'Overview',        icon: 'grid' },
+    { tab: 'staff',    label: 'Staff Management', icon: 'user' },
+    { tab: 'roles',    label: 'Role Matrix',      icon: 'shield' },
+    { tab: 'flags',    label: 'Feature Flags',    icon: 'flag' },
+    { tab: 'platform', label: 'Platform Config',  icon: 'settings' },
   ]
 
   const adminAccountItems = [
@@ -185,7 +187,8 @@ export default function Sidebar({ isOpen, onClose }) {
 
   // Active state for admin tab links
   const currentAdminTab = new URLSearchParams(location.search).get('tab') || 'overview'
-  const isAdminTabActive = (tab) => location.pathname === '/app/admin' && currentAdminTab === tab
+  const isTabActive = (basePath, tab) => location.pathname === basePath && currentAdminTab === tab
+  const isSuper = userRole === 'super_admin'
 
   return (
     <aside
@@ -225,13 +228,13 @@ export default function Sidebar({ isOpen, onClose }) {
             </span>
           </div>
 
-          <div className="px-2.5 pb-1 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Platform</div>
+          <div className="px-2.5 pb-1 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Staff Console</div>
 
-          {adminNavItems.map((item) => {
-            const isActive = isAdminTabActive(item.tab)
+          {staffNavItems.map((item) => {
+            const isActive = isTabActive('/app/admin', item.tab)
             return (
               <Link
-                key={item.tab}
+                key={`admin-${item.tab}`}
                 to={`/app/admin?tab=${item.tab}`}
                 onClick={handleNavClick}
                 className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
@@ -245,6 +248,31 @@ export default function Sidebar({ isOpen, onClose }) {
               </Link>
             )
           })}
+
+          {/* Platform console — super_admin only */}
+          {isSuper && (
+            <>
+              <div className="px-2.5 pb-1 pt-3 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Platform Console</div>
+              {platformNavItems.map((item) => {
+                const isActive = isTabActive('/app/console', item.tab)
+                return (
+                  <Link
+                    key={`console-${item.tab}`}
+                    to={`/app/console?tab=${item.tab}`}
+                    onClick={handleNavClick}
+                    className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150 ${
+                      isActive
+                        ? 'bg-white text-neutral-950'
+                        : 'text-neutral-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    <span className="w-3.5 h-3.5 flex-shrink-0">{icons[item.icon]}</span>
+                    <span className="truncate">{item.label}</span>
+                  </Link>
+                )
+              })}
+            </>
+          )}
 
           <div className="px-2.5 pb-1 pt-3 text-[9px] font-bold text-neutral-600 uppercase tracking-widest">Tools</div>
 

@@ -15,21 +15,12 @@ async function adminAction(body) {
   return data
 }
 
-// Tabs — super_admin sees everything; admin sees business ops (no platform config / feature flags / roles)
-const SUPER_TABS = [
-  { id: 'overview',      label: 'Overview' },
-  { id: 'subscribers',   label: 'Subscribers' },
-  { id: 'users',         label: 'Users' },
-  { id: 'demo_requests', label: 'Demo Requests' },
-  { id: 'analytics',     label: 'Analytics' },
-  { id: 'api_keys',      label: 'API Keys' },
-  { id: 'staff',         label: 'Staff' },
-  { id: 'flags',         label: 'Feature Flags' },
-  { id: 'roles',         label: 'Roles' },
-  { id: 'platform',      label: 'Platform' },
-]
-
-const ADMIN_TABS = [
+// Two distinct consoles (see App.jsx routing):
+//   mode="admin"   → /app/admin   Staff console — business operations. Both
+//                    admin and super_admin can use it.
+//   mode="console" → /app/console Super-admin platform console — staff, roles,
+//                    feature flags, infrastructure. super_admin ONLY.
+const STAFF_OPS_TABS = [
   { id: 'overview',      label: 'Overview' },
   { id: 'subscribers',   label: 'Subscribers' },
   { id: 'users',         label: 'Users' },
@@ -37,6 +28,14 @@ const ADMIN_TABS = [
   { id: 'analytics',     label: 'Analytics' },
   { id: 'api_keys',      label: 'API Keys' },
   { id: 'support',       label: 'Support' },
+]
+
+const PLATFORM_TABS = [
+  { id: 'overview',      label: 'Overview' },
+  { id: 'staff',         label: 'Staff' },
+  { id: 'roles',         label: 'Roles' },
+  { id: 'flags',         label: 'Feature Flags' },
+  { id: 'platform',      label: 'Platform' },
 ]
 
 // ── Role privilege matrix ──────────────────────────────────────────────────
@@ -151,19 +150,27 @@ function generateApiKey(prefix) {
   return key
 }
 
-export default function AdminPage() {
+export default function AdminPage({ mode = 'admin' }) {
   const navigate = useNavigate()
   const { userRole } = useStore()
   const [searchParams, setSearchParams] = useSearchParams()
 
+  // Which console are we rendering? Platform console is super-admin only and is
+  // route-guarded by SuperAdminRoute; this also drives the tab set + chrome.
+  const isConsole = mode === 'console'
+  const MODE_TABS = isConsole ? PLATFORM_TABS : STAFF_OPS_TABS
+  const allowedTabIds = MODE_TABS.map(t => t.id)
+
   // Sync active tab with URL — sidebar links use ?tab=xxx
-  const tabFromUrl = searchParams.get('tab') || 'overview'
+  const urlTab = searchParams.get('tab') || 'overview'
+  const tabFromUrl = allowedTabIds.includes(urlTab) ? urlTab : 'overview'
   const [activeTab, setActiveTab] = useState(tabFromUrl)
 
   useEffect(() => {
     const t = searchParams.get('tab') || 'overview'
-    setActiveTab(t)
-  }, [searchParams])
+    setActiveTab(allowedTabIds.includes(t) ? t : 'overview')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, mode])
 
   const handleTabChange = (tabId) => {
     setSearchParams({ tab: tabId }, { replace: true })
@@ -431,23 +438,32 @@ export default function AdminPage() {
               </svg>
             </div>
             <h1 className="font-semibold text-lg text-neutral-900 dark:text-white">
-              {userRole === 'super_admin' ? 'Super Admin Portal' : 'Admin Portal'}
+              {isConsole ? 'Super Admin Console' : 'Staff Console'}
             </h1>
             <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-              userRole === 'super_admin'
+              isConsole
                 ? 'bg-neutral-900 dark:bg-white text-white dark:text-neutral-950'
                 : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
             }`}>
-              {userRole === 'super_admin' ? 'Owner' : 'Staff'}
+              {isConsole ? 'Platform' : 'Business Ops'}
             </span>
           </div>
           <p className="text-xs text-neutral-500 truncate">
-            {userRole === 'super_admin'
-              ? 'Full platform control · Infrastructure · Staff · Lifetime access'
-              : 'Business operations · Client management · Revenue visibility'}
+            {isConsole
+              ? 'Full platform control · Infrastructure · Staff · Roles · Feature flags'
+              : 'Business operations · Client management · Revenue visibility · Support'}
           </p>
         </div>
         <div className="flex items-center gap-2 self-start flex-shrink-0">
+          {/* Super admins can jump between the two consoles */}
+          {userRole === 'super_admin' && (
+            <button
+              onClick={() => navigate(isConsole ? '/app/admin' : '/app/console')}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg hover:opacity-90"
+            >
+              {isConsole ? '→ Staff Console' : '→ Platform Console'}
+            </button>
+          )}
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-lg">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-[10px] font-medium text-emerald-700 dark:text-emerald-400">Live</span>
@@ -466,7 +482,7 @@ export default function AdminPage() {
 
       {/* Tabs — scrollable on mobile */}
       {(() => {
-        const tabs = userRole === 'super_admin' ? SUPER_TABS : ADMIN_TABS
+        const tabs = MODE_TABS
         return (
           <div className="flex gap-0.5 mb-6 border-b border-neutral-200 dark:border-neutral-800 overflow-x-auto overscroll-x-contain">
             {tabs.map(t => (

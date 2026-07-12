@@ -42,8 +42,10 @@ export default function LoginPage() {
     const role = await loadRole()
     if (redirectUrl) {
       navigate(redirectUrl)
-    } else if (role === 'super_admin' || role === 'admin') {
-      navigate('/app/admin')
+    } else if (role === 'super_admin') {
+      navigate('/app/console')   // platform console
+    } else if (role === 'admin') {
+      navigate('/app/admin')     // staff console
     } else {
       navigate('/app/dashboard')
     }

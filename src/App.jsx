@@ -2,7 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect, Suspense, lazy } from 'react'
 import { useStore } from './store/useStore'
 import { onAuthStateChange, supabase } from './lib/supabase'
-import { ProtectedRoute, AdminRoute } from './components/ProtectedRoute'
+import { ProtectedRoute, AdminRoute, SuperAdminRoute } from './components/ProtectedRoute'
 import { ThemeProvider } from './context/ThemeContext'
 import AppLayout from './components/AppLayout'
 
@@ -140,7 +140,10 @@ function App() {
               <Route path="reports"            element={<FinancialReportsPage />} />
               <Route path="recurring-invoices" element={<RecurringInvoicesPage />} />
 
-              <Route path="admin"         element={<AdminRoute><AdminPage /></AdminRoute>} />
+              {/* Staff console (business ops) — admin + super_admin */}
+              <Route path="admin"         element={<AdminRoute><AdminPage mode="admin" /></AdminRoute>} />
+              {/* Platform console (staff, roles, flags, infra) — super_admin only */}
+              <Route path="console"       element={<SuperAdminRoute><AdminPage mode="console" /></SuperAdminRoute>} />
               <Route path="client-access" element={<AdminRoute><ClientAccessPage /></AdminRoute>} />
             </Route>
 
