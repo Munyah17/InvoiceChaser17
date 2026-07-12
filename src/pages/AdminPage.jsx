@@ -34,6 +34,7 @@ const PLATFORM_TABS = [
   { id: 'overview',      label: 'Overview' },
   { id: 'staff',         label: 'Staff' },
   { id: 'roles',         label: 'Roles' },
+  { id: 'pricing',       label: 'Pricing' },
   { id: 'flags',         label: 'Feature Flags' },
   { id: 'platform',      label: 'Platform' },
 ]
@@ -209,6 +210,39 @@ export default function AdminPage({ mode = 'admin' }) {
   const [processingDemo, setProcessingDemo] = useState(null)
 
   const [flags, setFlags] = useState(DEFAULT_FLAGS)
+
+  // ── Pricing editor (super_admin) ──
+  const [pricing, setPricing] = useState([])
+  const [pricingSaving, setPricingSaving] = useState(false)
+  const [pricingMsg, setPricingMsg] = useState(null)
+
+  useEffect(() => {
+    if (mode !== 'console') return
+    supabase.from('app_pricing').select('*').order('display_order').then(({ data }) => {
+      if (data) setPricing(data)
+    })
+  }, [mode])
+
+  const handleSavePricing = async () => {
+    setPricingSaving(true)
+    setPricingMsg(null)
+    try {
+      const payload = pricing.map(p => ({
+        plan_key: p.plan_key,
+        name: p.name,
+        amount_cents: Math.round(Number(p.amount_cents)),
+        interval: p.interval,
+        active: p.active,
+      }))
+      const res = await adminAction({ action: 'update-pricing', pricing: payload })
+      if (res.pricing) setPricing(res.pricing)
+      setPricingMsg({ type: 'success', text: 'Pricing updated. New prices apply to checkout immediately.' })
+    } catch (err) {
+      setPricingMsg({ type: 'error', text: err.message || 'Failed to update pricing' })
+    } finally {
+      setPricingSaving(false)
+    }
+  }
 
   const [announcement, setAnnouncement] = useState('')
   const [announcementSent, setAnnouncementSent] = useState(false)
@@ -947,6 +981,92 @@ export default function AdminPage({ mode = 'admin' }) {
             {Object.keys(metrics.planBreakdown).length === 0 && !loading && (
               <p className="text-xs text-neutral-400">No data yet</p>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── PRICING (super_admin) ────────────────────────────────────────── */}
+      {activeTab === 'pricing' && userRole === 'super_admin' && (
+        <div className="space-y-4">
+          <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl overflow-hidden">
+            <div className="px-5 py-3 border-b border-neutral-200 dark:border-neutral-800">
+              <span className="font-semibold text-sm text-neutral-900 dark:text-white">Plan Pricing</span>
+              <p className="text-xs text-neutral-500 mt-0.5">Set the price of each paid tier. Changes apply to Stripe &amp; Paynow checkout immediately (price is enforced server-side).</p>
+            </div>
+            <div className="overflow-x-auto overscroll-x-contain">
+              <table className="w-full text-xs min-w-[540px]">
+                <thead><tr className="bg-neutral-50 dark:bg-neutral-800/50 text-left">
+                  <th className="px-4 py-2 font-semibold text-neutral-500 uppercase">Plan</th>
+                  <th className="px-4 py-2 font-semibold text-neutral-500 uppercase">Display name</th>
+                  <th className="px-4 py-2 font-semibold text-neutral-500 uppercase text-right">Price (USD)</th>
+                  <th className="px-4 py-2 font-semibold text-neutral-500 uppercase">Billing</th>
+                  <th className="px-4 py-2 font-semibold text-neutral-500 uppercase text-center">Active</th>
+                </tr></thead>
+                <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                  {pricing.map((p, idx) => (
+                    <tr key={p.plan_key}>
+                      <td className="px-4 py-2 font-medium text-neutral-900 dark:text-white capitalize">{p.plan_key}</td>
+                      <td className="px-4 py-2">
+                        <input
+                          value={p.name || ''}
+                          onChange={e => setPricing(prev => prev.map((x, i) => i === idx ? { ...x, name: e.target.value } : x))}
+                          className="w-40 px-2 py-1 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded text-neutral-900 dark:text-white outline-none"
+                        />
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        <div className="inline-flex items-center gap-1">
+                          <span className="text-neutral-400">$</span>
+                          <input
+                            type="number" min="0" step="0.01"
+                            value={(Number(p.amount_cents) / 100).toString()}
+                            onChange={e => {
+                              const cents = Math.round(parseFloat(e.target.value || '0') * 100)
+                              setPricing(prev => prev.map((x, i) => i === idx ? { ...x, amount_cents: cents } : x))
+                            }}
+                            className="w-24 px-2 py-1 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded text-right text-neutral-900 dark:text-white outline-none"
+                          />
+                        </div>
+                      </td>
+                      <td className="px-4 py-2">
+                        <select
+                          value={p.interval}
+                          onChange={e => setPricing(prev => prev.map((x, i) => i === idx ? { ...x, interval: e.target.value } : x))}
+                          className="px-2 py-1 bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-700 rounded text-neutral-900 dark:text-white outline-none"
+                        >
+                          <option value="month">Monthly</option>
+                          <option value="year">Yearly</option>
+                          <option value="once">One-time</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        <input
+                          type="checkbox"
+                          checked={p.active !== false}
+                          onChange={e => setPricing(prev => prev.map((x, i) => i === idx ? { ...x, active: e.target.checked } : x))}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                  {pricing.length === 0 && (
+                    <tr><td colSpan={5} className="px-4 py-8 text-center text-neutral-400">Loading pricing…</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            <div className="px-5 py-3 border-t border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+              <button
+                onClick={handleSavePricing}
+                disabled={pricingSaving || pricing.length === 0}
+                className="px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 rounded-lg text-xs font-medium hover:opacity-90 disabled:opacity-40"
+              >
+                {pricingSaving ? 'Saving…' : 'Save pricing'}
+              </button>
+              {pricingMsg && (
+                <span className={`text-xs ${pricingMsg.type === 'error' ? 'text-red-500' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                  {pricingMsg.text}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}

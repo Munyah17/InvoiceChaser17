@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { useStore } from '../store/useStore'
 import { PLAN_PRICES } from '../lib/stripe'
+import { getPlanPrices } from '../lib/pricing'
 
 const PLANS = [
   {
@@ -69,6 +71,16 @@ export default function PlansPage() {
     window.location.href = `/checkout?plan=${planId}`
   }
 
+  const [priceMap, setPriceMap] = useState({})
+  useEffect(() => {
+    getPlanPrices().then(list => {
+      const m = {}
+      list.forEach(p => { m[p.plan_key] = Number(p.amount_cents) / 100 })
+      setPriceMap(m)
+    })
+  }, [])
+  const priceOf = (id, fallback) => (priceMap[id] != null ? priceMap[id] : fallback)
+
   const currentPlan = PLANS.find(p => p.id === userPlan) || PLANS[0]
 
   return (
@@ -87,7 +99,7 @@ export default function PlansPage() {
             </div>
           </div>
           <div className="text-right">
-            <div className="font-semibold text-2xl">${currentPlan.price}</div>
+            <div className="font-semibold text-2xl">${priceOf(currentPlan.id, currentPlan.price)}</div>
             <div className="text-xs opacity-70">/{currentPlan.period}</div>
           </div>
         </div>
@@ -120,7 +132,7 @@ export default function PlansPage() {
             {plan.popular && <span className="text-[9px] font-medium bg-neutral-900 dark:bg-white text-white dark:text-neutral-950 px-2 py-0.5 rounded-full">Popular</span>}
             <h3 className="font-semibold text-sm text-neutral-900 dark:text-white mt-2">{plan.name}</h3>
             <div className="flex items-baseline gap-1 mt-1 mb-3">
-              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${plan.price}</span>
+              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${priceOf(plan.id, plan.price)}</span>
               <span className="text-[11px] text-neutral-500">/{plan.period}</span>
             </div>
             <ul className="space-y-1.5 mb-4">
@@ -149,7 +161,7 @@ export default function PlansPage() {
           <div key={plan.id} className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl p-4">
             <h3 className="font-semibold text-sm text-neutral-900 dark:text-white">{plan.name}</h3>
             <div className="flex items-baseline gap-1 mt-1 mb-3">
-              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${plan.price}</span>
+              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${priceOf(plan.id, plan.price)}</span>
               <span className="text-[11px] text-neutral-500">/{plan.period}</span>
             </div>
             <ul className="space-y-1.5 mb-4">
@@ -178,7 +190,7 @@ export default function PlansPage() {
             <span className="text-[9px] font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 px-2 py-0.5 rounded-full">Once Off</span>
             <h3 className="font-semibold text-sm text-neutral-900 dark:text-white mt-2">{LIFETIME.name}</h3>
             <div className="flex items-baseline gap-1 mt-1 mb-3">
-              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${LIFETIME.price}</span>
+              <span className="font-semibold text-xl text-neutral-900 dark:text-white">${priceOf('lifetime', LIFETIME.price)}</span>
               <span className="text-[11px] text-neutral-500">/{LIFETIME.period}</span>
             </div>
             <ul className="space-y-1.5 mb-4">

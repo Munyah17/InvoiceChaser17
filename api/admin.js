@@ -22,14 +22,14 @@ export default async function handler(req, res) {
       return res.status(auth.status).json({ error: auth.error })
     }
 
-    // HANDLE: GET /api/admin - List all demo requests
+    // HANDLE: GET /api/admin - demo requests + current pricing
     if (req.method === 'GET') {
-      const { data, error } = await supabase
-        .from('demo_requests')
-        .select('*')
-        .order('created_at', { ascending: false })
+      const [{ data: requests, error }, { data: pricing }] = await Promise.all([
+        supabase.from('demo_requests').select('*').order('created_at', { ascending: false }),
+        supabase.from('app_pricing').select('*').order('display_order'),
+      ])
       if (error) return res.status(500).json({ error: error.message })
-      return res.status(200).json({ requests: data })
+      return res.status(200).json({ requests, pricing: pricing || [] })
     }
 
     // HANDLE: POST /api/admin
@@ -98,6 +98,35 @@ export default async function handler(req, res) {
         const { error } = await supabase.from('profiles').update(patch).eq('id', userId)
         if (error) return res.status(400).json({ error: 'Failed to update details' })
         return res.status(200).json({ success: true })
+      }
+
+      // PRICING: Update plan prices — super_admin only
+      if (action === 'update-pricing') {
+        if (auth.role !== 'super_admin') {
+          return res.status(403).json({ error: 'Only a super admin can change pricing' })
+        }
+        const { pricing } = req.body
+        if (!Array.isArray(pricing) || pricing.length === 0) {
+          return res.status(400).json({ error: 'Missing pricing array' })
+        }
+        const VALID_INTERVALS = ['month', 'year', 'once']
+        for (const p of pricing) {
+          const cents = Math.round(Number(p.amount_cents))
+          if (!p.plan_key || !Number.isFinite(cents) || cents < 0) {
+            return res.status(400).json({ error: `Invalid price for ${p.plan_key || 'unknown plan'}` })
+          }
+          if (p.interval && !VALID_INTERVALS.includes(p.interval)) {
+            return res.status(400).json({ error: `Invalid interval for ${p.plan_key}` })
+          }
+          const patch = { amount_cents: cents, updated_at: new Date().toISOString() }
+          if (p.interval) patch.interval = p.interval
+          if (typeof p.name === 'string' && p.name.trim()) patch.name = p.name.trim()
+          if (typeof p.active === 'boolean') patch.active = p.active
+          const { error } = await supabase.from('app_pricing').update(patch).eq('plan_key', p.plan_key)
+          if (error) return res.status(400).json({ error: `Failed to update ${p.plan_key}` })
+        }
+        const { data: updated } = await supabase.from('app_pricing').select('*').order('display_order')
+        return res.status(200).json({ success: true, pricing: updated || [] })
       }
 
       // USER: Suspend (ban) — admin + super_admin

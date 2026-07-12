@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import { PLAN_PRICES } from '../lib/stripe'
+import { getPlanAmountCents } from '../lib/pricing'
 
 export default function CheckoutPage() {
   const [searchParams] = useSearchParams()
@@ -14,6 +15,15 @@ export default function CheckoutPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [gateway, setGateway] = useState('stripe')
+  // Live price from the app_pricing table (super-admin editable); falls back to
+  // the hardcoded plan price until it loads.
+  const [amountCents, setAmountCents] = useState(plan ? (plan.monthly || plan.oneTime) : 0)
+
+  useEffect(() => {
+    let alive = true
+    getPlanAmountCents(planId).then(c => { if (alive && c) setAmountCents(c) })
+    return () => { alive = false }
+  }, [planId])
 
   if (!plan) {
     return (
@@ -56,7 +66,7 @@ export default function CheckoutPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         plan: plan.name,
-        amount: plan.monthly || plan.oneTime,
+        amount: amountCents,
         email: user?.email,
         plan_id: planId,
         user_id: user?.id || null,
@@ -79,7 +89,7 @@ export default function CheckoutPage() {
 
   const redirectToPaynow = async () => {
     const reference = `IC-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`
-    const amountDollars = (plan.monthly || plan.oneTime) / 100
+    const amountDollars = amountCents / 100
 
     const response = await fetch('/api/paynow', {
       method: 'POST',
@@ -134,13 +144,13 @@ export default function CheckoutPage() {
               </p>
             </div>
             <p className="text-xl font-bold text-neutral-900 dark:text-white">
-              {formatPrice(plan.monthly || plan.oneTime)}
+              {formatPrice(amountCents)}
             </p>
           </div>
           <div className="flex justify-between items-center pt-3">
             <p className="font-semibold text-neutral-900 dark:text-white">Total due today</p>
             <p className="text-2xl font-bold text-neutral-900 dark:text-white">
-              {formatPrice(plan.monthly || plan.oneTime)}
+              {formatPrice(amountCents)}
             </p>
           </div>
         </div>
@@ -211,7 +221,7 @@ export default function CheckoutPage() {
               Redirecting to {gateway === 'stripe' ? 'Stripe' : 'Paynow'}...
             </>
           ) : (
-            `Continue to ${gateway === 'stripe' ? 'Stripe' : 'Paynow'} Checkout — ${formatPrice(plan.monthly || plan.oneTime)}`
+            `Continue to ${gateway === 'stripe' ? 'Stripe' : 'Paynow'} Checkout — ${formatPrice(amountCents)}`
           )}
         </button>
 

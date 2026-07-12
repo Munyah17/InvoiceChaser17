@@ -64,24 +64,43 @@ export default async function handler(req, res) {
 
     const { plan, amount, email, plan_id, user_id, metadata = {} } = req.body
 
-    if (!amount || amount < 1) {
+    const planKey = plan_id || plan
+
+    // Price is resolved server-side from app_pricing (set by super admins) so
+    // the client cannot tamper with the charged amount. Falls back to the
+    // client-supplied amount only if the plan isn't in the pricing table.
+    let amountCents = Math.round(Number(amount))
+    let interval = 'month'
+    if (supabase && planKey) {
+      const { data: priceRow } = await supabase
+        .from('app_pricing')
+        .select('amount_cents, interval, active')
+        .eq('plan_key', planKey)
+        .maybeSingle()
+      if (priceRow && priceRow.active !== false) {
+        amountCents = priceRow.amount_cents
+        interval = priceRow.interval
+      }
+    }
+
+    if (!amountCents || amountCents < 1) {
       return res.status(400).json({ error: 'Invalid amount' })
     }
 
-    const isSubscription = ['starter', 'professional', 'business'].includes(plan_id || plan)
+    const isSubscription = interval === 'month' || interval === 'year'
     const origin = req.headers.origin || process.env.VITE_APP_URL
 
     const lineItem = {
       price_data: {
         currency: 'usd',
-        product_data: { name: plan },
-        unit_amount: amount,
+        product_data: { name: plan || planKey },
+        unit_amount: amountCents,
       },
       quantity: 1,
     }
 
     if (isSubscription) {
-      lineItem.price_data.recurring = { interval: 'month' }
+      lineItem.price_data.recurring = { interval: interval === 'year' ? 'year' : 'month' }
     }
 
     const session = await stripe.checkout.sessions.create({

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../store/useStore'
 import Button from '../components/Button'
+import { getPlanPrices } from '../lib/pricing'
 
 const PLANS = [
   {
@@ -59,6 +60,17 @@ export default function PricingPage() {
   const [searchParams] = useSearchParams()
   const { user } = useStore()
 
+  // Live prices from app_pricing (super-admin editable), keyed by plan id.
+  const [priceMap, setPriceMap] = useState({})
+  useEffect(() => {
+    getPlanPrices().then(list => {
+      const m = {}
+      list.forEach(p => { m[p.plan_key] = Number(p.amount_cents) / 100 })
+      setPriceMap(m)
+    })
+  }, [])
+  const priceOf = (id, fallback) => (priceMap[id] != null ? priceMap[id] : fallback)
+
   // Check if a plan is pre-selected from URL
   const preselectedPlan = searchParams.get('plan')
 
@@ -106,7 +118,7 @@ export default function PricingPage() {
               </h3>
               <div className="mb-6">
                 <span className="font-display font-bold text-4xl text-white">
-                  ${plan.price}
+                  ${priceOf(plan.id, plan.price)}
                 </span>
                 <span className="text-neutral-400">/{plan.period}</span>
               </div>
@@ -216,7 +228,7 @@ export default function PricingPage() {
                 </ul>
               </div>
               <div className="mt-6 text-left">
-                <div className="font-display font-bold text-5xl lg:text-6xl text-white mb-1">$89<span className="text-xl text-neutral-300 font-normal">once</span></div>
+                <div className="font-display font-bold text-5xl lg:text-6xl text-white mb-1">${priceOf('lifetime', 89)}<span className="text-xl text-neutral-300 font-normal">once</span></div>
                 <div className="text-neutral-400 mb-4">Best value for serious businesses</div>
                 <Button
                   variant="default"
