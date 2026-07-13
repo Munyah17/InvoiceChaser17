@@ -7,7 +7,7 @@ import { activatePlan } from './_lib/activate-plan.js'
 // Signature verification needs the exact raw bytes Stripe sent.
 export const config = { api: { bodyParser: false } }
 
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY)
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
 
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
